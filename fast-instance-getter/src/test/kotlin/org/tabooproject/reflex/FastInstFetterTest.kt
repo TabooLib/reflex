@@ -17,11 +17,11 @@ class FastInstFetterTest {
 
     @Test
     fun testObjectInstance() {
-        assert(ObjectTarget == FastInstGetter(ObjectTarget::class.java.name, false).instance)
+        assert(ObjectTarget == FastInstGetter(ObjectTarget::class.java.name).instance)
     }
 
     @Test
     fun testCompanionInstance() {
-        assert(CompanionTarget.Companion == FastInstGetter(CompanionTarget::class.java.name, true).instance)
+        assert(CompanionTarget.Companion == FastInstGetter(CompanionTarget::class.java.name).companion)
     }
 }
