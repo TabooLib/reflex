@@ -4,6 +4,7 @@ import org.apache.commons.lang3.BitField
 import org.apache.commons.lang3.Range
 import org.junit.jupiter.api.Test
 import org.tabooproject.reflex.asm.AsmClassConstructor
+import kotlin.reflect.full.memberProperties
 
 /**
  * @author 坏黑
@@ -13,18 +14,18 @@ class AnalyserTestAsm {
 
     private val analyse = ClassAnalyser.analyse(TestTargetAsm::class.java)
 
-    private class TestTargetAsm(val intVal: Int) {
+    private class TestTargetAsm(private val intVal: Int) {
 
         var range: Range<Int>? = null // NoClassDefFoundError
 
         var stringVar = "test"
 
-        constructor(): this(0)
+        constructor() : this(0)
 
         fun method() {
         }
 
-        fun method(value: Int): Int {
+        private fun method(value: Int): Int {
             return value
         }
 
@@ -40,6 +41,17 @@ class AnalyserTestAsm {
             fun methodStatic(value: Int): Int {
                 return value
             }
+        }
+    }
+
+    @Test
+    fun testKotlinReflect() {
+        val target = TestTargetAsm(10)
+        val find = TestTargetAsm::class.memberProperties.first { it.name == "intVal" }
+        try {
+            find.get(target)
+            throw IllegalStateException()
+        } catch (_: NoClassDefFoundError) {
         }
     }
 
@@ -61,8 +73,8 @@ class AnalyserTestAsm {
     fun testAnalyse() {
         // intVal, range, bitField, stringVar, intRangeVal, Companion == 6
         assert(analyse.fields.size == 6)
-        // getRange, setRange, getStringVar, setStringVar, method, method, getIntVal, methodStatic == 8
-        assert(analyse.methods.size == 8)
+        // getRange, setRange, getStringVar, setStringVar, method, method, methodStatic == 7
+        assert(analyse.methods.size == 7)
         assert(analyse.constructors.size == 2)
     }
 
@@ -83,7 +95,7 @@ class AnalyserTestAsm {
     fun testSetVal() {
         val target = TestTargetAsm(10)
         analyse.getField("intVal").set(target, 20)
-        assert(target.intVal == 20)
+        assert(analyse.getField("intVal").get(target) == 20)
     }
 
     @Test

@@ -13,14 +13,14 @@ class AnalyserTestReflection {
 
     private class TestTargetReflection(val intVal: Int) {
 
-        var stringVar = "test"
+        private var stringVar = "test"
 
         constructor() : this(0)
 
         fun method() {
         }
 
-        fun method(value: Int): Int {
+        private fun method(value: Int): Int {
             return value
         }
 
@@ -45,8 +45,8 @@ class AnalyserTestReflection {
     fun testAnalyse() {
         // intVal, stringVar, intRangeVal, Companion == 4
         assert(analyse.fields.size == 4)
-        // getStringVar, setStringVar, method, method, getIntVal, methodStatic == 6
-        assert(analyse.methods.size == 6)
+        // method, method, getIntVal, methodStatic == 4
+        assert(analyse.methods.size == 4)
         assert(analyse.constructors.size == 2)
     }
 
@@ -80,7 +80,7 @@ class AnalyserTestReflection {
     fun testSetVar() {
         val target = TestTargetReflection()
         analyse.getField("stringVar").set(target, "update")
-        assert(target.stringVar == "update")
+        assert(analyse.getField("stringVar").get(target) == "update")
     }
 
     @Test
