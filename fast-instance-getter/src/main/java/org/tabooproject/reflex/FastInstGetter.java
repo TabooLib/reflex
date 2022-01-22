@@ -1,7 +1,5 @@
 package org.tabooproject.reflex;
 
-import java.io.ByteArrayOutputStream;
-
 /**
  * TabooLib用instance获取器
  * 采用纯粹的byte数组操作动态生成类
@@ -14,63 +12,63 @@ public class FastInstGetter extends ClassLoader {
     private static final byte[] END = {0, 33, 0, 4, 0, 5, 0, 1, 0, 6, 0, 0, 0, 3, 0, 1, 0, 7, 0, 8, 0, 1, 0, 9, 0, 0, 0, 47, 0, 1, 0, 1, 0, 0, 0, 5, 42, -73, 0, 1, -79, 0, 0, 0, 2, 0, 10, 0, 0, 0, 6, 0, 1, 0, 0, 0, 7, 0, 11, 0, 0, 0, 12, 0, 1, 0, 0, 0, 5, 0, 12, 0, 13, 0, 0, 0, 1, 0, 14, 0, 15, 0, 1, 0, 9, 0, 0, 0, 46, 0, 1, 0, 1, 0, 0, 0, 4, -78, 0, 2, -80, 0, 0, 0, 2, 0, 10, 0, 0, 0, 6, 0, 1, 0, 0, 0, 11, 0, 11, 0, 0, 0, 12, 0, 1, 0, 0, 0, 4, 0, 12, 0, 13, 0, 0, 0, 1, 0, 16, 0, 15, 0, 1, 0, 9, 0, 0, 0, 46, 0, 1, 0, 1, 0, 0, 0, 4, -78, 0, 3, -80, 0, 0, 0, 2, 0, 10, 0, 0, 0, 6, 0, 1, 0, 0, 0, 16, 0, 11, 0, 0, 0, 12, 0, 1, 0, 0, 0, 4, 0, 12, 0, 13, 0, 0, 0, 1, 0, 17, 0, 0, 0, 2, 0, 18,};
     private IGetter getter = null;
 
-
     public FastInstGetter(String className) {
         className = className.replace('.', '/');
         String interfaceName = IGetter.class.getName().replace('.', '/');
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        int totalMaxLength = START.length
+                + 2 + interfaceName.length() * 3 + 1
+                + 2 + className.length() * 3 + 1
+                + 2 + 8 + 1
+                + 2 + 1 + className.length() * 3 + 1 + 1
+                + 2 + className.length() * 3 + 1
+                + 2 + 9 + 1
+                + 2 + 1 + className.length() * 3 + 11
+                + END.length;
+        byte [] synthetic = new byte[totalMaxLength];
+        System.arraycopy(START,0,synthetic,0,START.length);
+        int pt = encode(synthetic, START.length,interfaceName);
+        synthetic[pt++] = 1;
+        pt = encode(synthetic, pt, className);
+        synthetic[pt++] = 1;
+        pt = encode(synthetic, pt, "INSTANCE");
+        synthetic[pt++] = 1;
+        pt = encode(synthetic, pt, "L" + className + ";");
+        synthetic[pt++] = 1;
+        pt = encode(synthetic, pt, className);
+        synthetic[pt++] = 1;
+        pt = encode(synthetic, pt, "Companion");
+        synthetic[pt++] = 1;
+        pt = encode(synthetic, pt, "L" + className + "$Companion;");
+        System.arraycopy(END,0,synthetic,pt,END.length);
+        pt += END.length;
+        Class<?> clazz = this.defineClass("pku.yim.tools.kotlin.InstGetter", synthetic, 0, pt);
         try {
-            outputStream.write(START);
-            outputStream.write(encode(interfaceName));
-            outputStream.write(1);
-            outputStream.write(encode(className));
-            outputStream.write(1);
-            outputStream.write(encode("INSTANCE"));
-            outputStream.write(1);
-            outputStream.write(encode("L" + className + ";"));
-            outputStream.write(1);
-            outputStream.write(encode(className));
-            outputStream.write(1);
-            outputStream.write(encode("Companion"));
-            outputStream.write(1);
-            outputStream.write(encode("L" + className + "$Companion;"));
-            outputStream.write(END);
-            byte[] synthetic = outputStream.toByteArray();
-            Class<?> clazz = this.defineClass("pku.yim.tools.kotlin.InstGetter", synthetic, 0, synthetic.length);
             getter = (IGetter) clazz.newInstance();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private static byte[] encode(String stringValue) {
+    private static int encode(byte [] data, int index, String stringValue) {
         int charLength = stringValue.length();
         if (charLength > 65535) {
             throw new IllegalArgumentException("UTF8 string too large");
         } else {
-            byte[] data = new byte[2 + charLength];
-            int index = 0;
+            int tmpIndex = index;
             data[index++] = (byte) (charLength >>> 8);
             data[index++] = (byte) (charLength);
             for (int i = 0; i < charLength; ++i) {
                 char charValue = stringValue.charAt(i);
                 if (charValue < 1 || charValue > 127) {
-                    return encodeUtf8(data, stringValue, i);
+                    return encodeUtf8(data, stringValue, tmpIndex, i);
                 }
                 data[index++] = ((byte) charValue);
             }
-            return data;
         }
+        return index;
     }
 
-    private static byte[] enlarge(byte[] origin, int size) {
-        int minimalCapacity = origin.length + size;
-        byte[] newData = new byte[minimalCapacity];
-        System.arraycopy(origin, 0, newData, 0, origin.length);
-        return newData;
-    }
-
-    public static byte[] encodeUtf8(byte[] data, String stringValue, int offset) {
+    public static int encodeUtf8(byte[] data, String stringValue, int index, int offset) {
         int charLength = stringValue.length();
         int byteLength = offset;
 
@@ -89,26 +87,23 @@ public class FastInstGetter extends ClassLoader {
         if (byteLength > 65535) {
             throw new IllegalArgumentException("UTF8 string too large");
         } else {
-            data[0] = (byte) (byteLength >>> 8);
-            data[1] = (byte) byteLength;
-            if (data.length + byteLength - offset > data.length) {
-                data = enlarge(data, byteLength + 2 - data.length);
-            }
-            int currentLength = offset + 2;
+            data[index++] = (byte) (byteLength >>> 8);
+            data[index++] = (byte) byteLength;
+            index += offset;
             for (int i = offset; i < charLength; ++i) {
                 char charValue = stringValue.charAt(i);
                 if (charValue >= 1 && charValue <= 127) {
-                    data[currentLength++] = (byte) charValue;
+                    data[index++] = (byte) charValue;
                 } else if (charValue <= 2047) {
-                    data[currentLength++] = (byte) (192 | charValue >> 6 & 31);
-                    data[currentLength++] = (byte) (128 | charValue & 63);
+                    data[index++] = (byte) (192 | charValue >> 6 & 31);
+                    data[index++] = (byte) (128 | charValue & 63);
                 } else {
-                    data[currentLength++] = (byte) (224 | charValue >> 12 & 15);
-                    data[currentLength++] = (byte) (128 | charValue >> 6 & 63);
-                    data[currentLength++] = (byte) (128 | charValue & 63);
+                    data[index++] = (byte) (224 | charValue >> 12 & 15);
+                    data[index++] = (byte) (128 | charValue >> 6 & 63);
+                    data[index++] = (byte) (128 | charValue & 63);
                 }
             }
-            return data;
+            return index;
         }
     }
 
@@ -121,7 +116,6 @@ public class FastInstGetter extends ClassLoader {
     }
 
     public interface IGetter {
-
         Object getInstance();
 
         Object getCompanion();
