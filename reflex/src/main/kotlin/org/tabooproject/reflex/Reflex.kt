@@ -32,10 +32,10 @@ class Reflex {
          * 执行方法
          * @param name 方法名称
          * @param parameter 方法参数
-         * @param fixed 是否为静态方法
+         * @param isStatic 是否为静态方法
          */
-        fun <T> Any.invokeMethod(name: String, vararg parameter: Any?, fixed: Boolean = false): T? {
-            return if (fixed && this is Class<*>) {
+        fun <T> Any.invokeMethod(name: String, vararg parameter: Any?, isStatic: Boolean = false): T? {
+            return if (isStatic && this is Class<*>) {
                 ReflexClass.of(this).getMethod(name, true, *parameter).invokeStatic(*parameter) as T?
             } else {
                 ReflexClass.of(javaClass).getMethod(name, true, *parameter).invoke(this, *parameter) as T?
@@ -59,26 +59,26 @@ class Reflex {
          * 修改字段
          * @param path 字段名称，使用 "/" 符号进行递归获取
          * @param value 值
-         * @param fixed 是否为静态字段
+         * @param isStatic 是否为静态字段
          */
-        fun Any.setProperty(path: String, value: Any?, fixed: Boolean = false) {
+        fun Any.setProperty(path: String, value: Any?, isStatic: Boolean = false) {
             if (path.contains('/')) {
-                getLocalProperty<Any>(path.substringBefore('/'), fixed)!!.setProperty(path.substringAfter('/'), value, fixed)
+                getLocalProperty<Any>(path.substringBefore('/'), isStatic)!!.setProperty(path.substringAfter('/'), value, isStatic)
             } else {
-                setLocalProperty(path, value, fixed)
+                setLocalProperty(path, value, isStatic)
             }
         }
 
-        private fun <T> Any.getLocalProperty(name: String, fixed: Boolean = false): T? {
-            return if (fixed && this is Class<*>) {
+        private fun <T> Any.getLocalProperty(name: String, isStatic: Boolean = false): T? {
+            return if (isStatic && this is Class<*>) {
                 ReflexClass.of(this).getField(name, true).get() as T?
             } else {
                 ReflexClass.of(javaClass).getField(name, true).get(this) as T?
             }
         }
 
-        private fun Any.setLocalProperty(name: String, value: Any?, fixed: Boolean = false) {
-            if (fixed && this is Class<*>) {
+        private fun Any.setLocalProperty(name: String, value: Any?, isStatic: Boolean = false) {
+            if (isStatic && this is Class<*>) {
                 ReflexClass.of(this).getField(name, true).setStatic(value)
             } else {
                 ReflexClass.of(javaClass).getField(name, true).set(this, value)
