@@ -21,7 +21,7 @@ dependencies {
 ```
 
 ## analyser & reflex
-Reflex为基于 Kotlin 语言开发的反射工具，其与 Java 原生反射API及 `kotlin-reflect` 间最大区别在于其可**无视软兼容**反射目标类中的字段或方法。 
+Reflex 为基于 Kotlin 语言开发的反射工具，其与 Java 原生反射 API 及 `kotlin-reflect` 间最大区别在于其可**无视软兼容**反射目标类中的字段或方法。 
 
 如下方代码所示，此类现象在 Bukkit 插件开发中较为常见：
 
