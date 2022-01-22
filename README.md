@@ -21,9 +21,9 @@ dependencies {
 ```
 
 ## analyser & reflex
-Reflex 为基于 Kotlin 语言开发的反射工具，其与 Java 原生反射API及 `kotlin-reflect` 间最大区别在于其可**无视软兼容**反射目标类中的字段或方法。 
+Reflex为基于 Kotlin 语言开发的反射工具，其与 Java 原生反射API及 `kotlin-reflect` 间最大区别在于其可**无视软兼容**反射目标类中的字段或方法。 
 
-如下方代码所示，这种环境在 Bukkit 插件开发中较为常见：
+如下方代码所示，此类现象在 Bukkit 插件开发中较为常见：
 
 ```java
 public class AnyPlugin extends JavaPlugin {
@@ -39,7 +39,7 @@ public class AnyPlugin extends JavaPlugin {
 Field field = Main.class.getDeclaredField("target"); // NoClassDefFoundError: PlayerPointsAPI
 ```
 
-同类问题也体现在 Bukkit 监听器的注册之上。若插件运行于 1.12 版本以下的环境时，下述 `PlayerJoinEvent` 监听器将无法正常注册。
+同类问题也存在于 Bukkit 监听器的注册之上。若插件运行于 1.12 版本以下的环境时，下述 `PlayerJoinEvent` 监听器将无法正常注册。
 
 ```java
 public class AnyListener extends Listener {
@@ -56,7 +56,7 @@ public class AnyListener extends Listener {
 }
 ```
 
-因此， Reflex 从 [TabooLib](https://github.com/taboolib/taboolib) 中分离并发展为独立类库。通过此类库，下述操作将成为可能：
+因此， Reflex 脱身于 [TabooLib](https://github.com/taboolib/taboolib) 并发展为独立类库。通过此类库，下述操作将成为可能：
 
 + 在 [AnalyserTestAsm.kt](https://github.com/TabooLib/Reflex/blob/master/analyser/src/test/kotlin/org/tabooproject/reflex/AnalyserTestAsm.kt) 中获取 `analyser` 的用法。
 + 在 [ReflexTest.kt](https://github.com/TabooLib/Reflex/blob/master/reflex/src/test/kotlin/org/tabooproject/reflex/ReflexTest.kt) 中获取 `relfex` 的用法。
