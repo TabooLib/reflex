@@ -7,7 +7,8 @@ package org.tabooproject.reflex
 abstract class ClassMethod(name: String, owner: Class<*>) : ClassMember(name, owner) {
 
     abstract val result: LazyClass
-    abstract val parameter: List<LazyClass>
+
+    abstract val parameter: List<LazyAnnotatedClass>
 
     abstract fun invoke(src: Any, vararg values: Any?): Any?
 

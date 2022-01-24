@@ -6,7 +6,7 @@ package org.tabooproject.reflex
  */
 abstract class ClassConstructor(name: String, owner: Class<*>) : ClassMember(name, owner) {
 
-    abstract val parameter: List<LazyClass>
+    abstract val parameter: List<LazyAnnotatedClass>
 
     abstract fun instance(vararg values: Any?): Any?
 

@@ -1,18 +1,20 @@
 package org.tabooproject.reflex.asm
 
-import org.tabooproject.reflex.JavaClassField
-import org.tabooproject.reflex.LazyClass
-import org.tabooproject.reflex.reflection.InstantClass
 import org.objectweb.asm.signature.SignatureReader
 import org.objectweb.asm.signature.SignatureWriter
+import org.tabooproject.reflex.ClassAnnotation
+import org.tabooproject.reflex.JavaClassField
+import org.tabooproject.reflex.LazyClass
 import org.tabooproject.reflex.Reflection
+import org.tabooproject.reflex.reflection.InstantClass
 import java.lang.reflect.Modifier
 
 /**
  * @author 坏黑
  * @since 2022/1/21 6:33 PM
  */
-class AsmClassField(name: String, owner: Class<*>, val descriptor: String, val access: Int) : JavaClassField(name, owner) {
+class AsmClassField(name: String, owner: Class<*>, val descriptor: String, val access: Int, override val annotations: List<ClassAnnotation>) :
+    JavaClassField(name, owner) {
 
     lateinit var localType: LazyClass
 

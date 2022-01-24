@@ -7,8 +7,13 @@ package org.tabooproject.reflex
  * @author 坏黑
  * @since 2022/1/22 2:53 AM
  */
-class JavaClassStructure(owner: Class<*>, fields: List<ClassField>, methods: List<ClassMethod>, constructors: List<ClassConstructor>) :
-    ClassStructure(owner, fields, methods, constructors) {
+class JavaClassStructure(
+    owner: Class<*>,
+    annotations: List<ClassAnnotation>,
+    fields: List<ClassField>,
+    methods: List<ClassMethod>,
+    constructors: List<ClassConstructor>,
+) : ClassStructure(owner, annotations, fields, methods, constructors) {
 
     override fun getField(name: String): ClassField {
         return fields.firstOrNull { it.name == name } ?: throw NoSuchFieldException(name)
@@ -52,5 +57,9 @@ class JavaClassStructure(owner: Class<*>, fields: List<ClassField>, methods: Lis
 
     override fun getConstructorByTypeSilently(vararg parameter: Class<*>): ClassConstructor? {
         return kotlin.runCatching { getConstructorByType(*parameter) }.getOrNull()
+    }
+
+    override fun getAnnotation(annotation: Class<out Annotation>): ClassAnnotation? {
+        return annotations.firstOrNull { it.source.name == annotation.name }
     }
 }

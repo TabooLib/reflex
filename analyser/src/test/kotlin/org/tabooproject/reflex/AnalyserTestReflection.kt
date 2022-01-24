@@ -1,6 +1,7 @@
 package org.tabooproject.reflex
 
 import org.junit.jupiter.api.Test
+import org.tabooproject.reflex.reflection.InstantAnnotation
 import org.tabooproject.reflex.reflection.InstantClassConstructor
 
 /**
@@ -11,17 +12,21 @@ class AnalyserTestReflection {
 
     private val analyse = ClassAnalyser.analyse(TestTargetReflection::class.java)
 
+    @AnalyserAnnotation("test1")
     private class TestTargetReflection(val intVal: Int) {
 
+        @AnalyserAnnotation("test2")
         private var stringVar = "test"
 
+        @AnalyserAnnotation("test3")
         constructor() : this(0)
 
         fun method() {
         }
 
-        private fun method(value: Int): Int {
-            return value
+        @AnalyserAnnotation("test4")
+        private fun method(@AnalyserAnnotation("test5") value1: Int, value2: Int): Int {
+            return value1 + value2
         }
 
         companion object {
@@ -98,13 +103,56 @@ class AnalyserTestReflection {
     fun testInvokeMethod() {
         val target = TestTargetReflection()
         analyse.getMethod("method").invoke(target)
-        assert(analyse.getMethod("method", 10).invoke(target, 10) == 10)
-        assert(analyse.getMethodByType("method", Int::class.java).invoke(target, 10) == 10)
+        assert(analyse.getMethod("method", 10, 10).invoke(target, 10, 10) == 20)
+        assert(analyse.getMethodByType("method", Int::class.java, Int::class.java).invoke(target, 10, 10) == 20)
     }
 
     @Test
     fun testInvokeStaticMethod() {
         assert(analyse.getMethod("methodStatic", 10).invokeStatic(10) == 10)
         assert(analyse.getMethodByType("methodStatic", Int::class.java).invokeStatic(10) == 10)
+    }
+
+    @Test
+    fun testClassAnnotation() {
+        val annotations = analyse.annotations
+        assert(annotations.size == 2)
+        assert(annotations[0] is InstantAnnotation)
+        assert(annotations[0].source.name == "org.tabooproject.reflex.AnalyserAnnotation")
+    }
+
+    @Test
+    fun testClassAnnotationGet1() {
+        val annotation = analyse.getAnnotation(AnalyserAnnotation::class.java)!!
+        assert(annotation is InstantAnnotation)
+        assert(annotation.property<String>("value") == "test1")
+    }
+
+    @Test
+    fun testClassAnnotationGet2() {
+        val annotation = analyse.getField("stringVar").getAnnotation(AnalyserAnnotation::class.java)!!
+        assert(annotation is InstantAnnotation)
+        assert(annotation.property<String>("value") == "test2")
+    }
+
+    @Test
+    fun testClassAnnotationGet3() {
+        val annotation = analyse.getConstructor().getAnnotation(AnalyserAnnotation::class.java)!!
+        assert(annotation is InstantAnnotation)
+        assert(annotation.property<String>("value") == "test3")
+    }
+
+    @Test
+    fun testClassAnnotationGet4() {
+        val annotation = analyse.getMethod("method", 0, 0).getAnnotation(AnalyserAnnotation::class.java)!!
+        assert(annotation is InstantAnnotation)
+        assert(annotation.property<String>("value") == "test4")
+    }
+
+    @Test
+    fun testClassAnnotationGet5() {
+        val annotation = analyse.getMethod("method", 0, 0).parameter[0].getAnnotation(AnalyserAnnotation::class.java)!!
+        assert(annotation is InstantAnnotation)
+        assert(annotation.property<String>("value") == "test5")
     }
 }

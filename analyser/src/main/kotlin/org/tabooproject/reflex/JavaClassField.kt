@@ -1,6 +1,5 @@
 package org.tabooproject.reflex
 
-import java.lang.IllegalStateException
 import java.lang.invoke.MethodHandle
 
 /**

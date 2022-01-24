@@ -3,6 +3,8 @@ package org.tabooproject.reflex
 import org.apache.commons.lang3.BitField
 import org.apache.commons.lang3.Range
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestTemplate
+import org.tabooproject.reflex.asm.AsmAnnotation
 import org.tabooproject.reflex.asm.AsmClassConstructor
 import kotlin.reflect.full.memberProperties
 
@@ -14,18 +16,22 @@ class AnalyserTestAsm {
 
     private val analyse = ClassAnalyser.analyse(TestTargetAsm::class.java)
 
+    @AnalyserAnnotation("test1")
     private class TestTargetAsm(private val intVal: Int) {
 
+        @AnalyserAnnotation("test2")
         var range: Range<Int>? = null // NoClassDefFoundError
 
         var stringVar = "test"
 
+        @AnalyserAnnotation("test3")
         constructor() : this(0)
 
         fun method() {
         }
 
-        private fun method(value: Int): Int {
+        @AnalyserAnnotation("test4")
+        private fun method(@AnalyserAnnotation("test5") value: Int): Int {
             return value
         }
 
@@ -134,5 +140,48 @@ class AnalyserTestAsm {
     fun testInvokeStaticMethod() {
         assert(analyse.getMethod("methodStatic", 10).invokeStatic(10) == 10)
         assert(analyse.getMethodByType("methodStatic", Int::class.java).invokeStatic(10) == 10)
+    }
+
+    @Test
+    fun testClassAnnotation() {
+        val annotations = analyse.annotations
+        assert(annotations.size == 2)
+        assert(annotations[0] is AsmAnnotation)
+        assert(annotations[0].source.name == "org.tabooproject.reflex.AnalyserAnnotation")
+    }
+
+    @Test
+    fun testClassAnnotationGet1() {
+        val annotation = analyse.getAnnotation(AnalyserAnnotation::class.java)!!
+        assert(annotation is AsmAnnotation)
+        assert(annotation.property<String>("value") == "test1")
+    }
+
+    @Test
+    fun testClassAnnotationGet2() {
+        val annotation = analyse.getField("range").getAnnotation(AnalyserAnnotation::class.java)!!
+        assert(annotation is AsmAnnotation)
+        assert(annotation.property<String>("value") == "test2")
+    }
+
+    @Test
+    fun testClassAnnotationGet3() {
+        val annotation = analyse.getConstructor().getAnnotation(AnalyserAnnotation::class.java)!!
+        assert(annotation is AsmAnnotation)
+        assert(annotation.property<String>("value") == "test3")
+    }
+
+    @Test
+    fun testClassAnnotationGet4() {
+        val annotation = analyse.getMethod("method", 0).getAnnotation(AnalyserAnnotation::class.java)!!
+        assert(annotation is AsmAnnotation)
+        assert(annotation.property<String>("value") == "test4")
+    }
+
+    @Test
+    fun testClassAnnotationGet5() {
+        val annotation = analyse.getMethod("method", 0).parameter[0].getAnnotation(AnalyserAnnotation::class.java)!!
+        assert(annotation is AsmAnnotation)
+        assert(annotation.property<String>("value") == "test5")
     }
 }

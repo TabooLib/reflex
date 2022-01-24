@@ -1,33 +1,40 @@
 package org.tabooproject.reflex.asm
 
-import org.tabooproject.reflex.reflection.InstantClass
-import org.tabooproject.reflex.JavaClassMethod
-import org.tabooproject.reflex.LazyClass
 import org.objectweb.asm.signature.SignatureReader
 import org.objectweb.asm.signature.SignatureVisitor
 import org.objectweb.asm.signature.SignatureWriter
-import org.tabooproject.reflex.Reflection
+import org.tabooproject.reflex.*
+import org.tabooproject.reflex.reflection.InstantAnnotatedClass
+import org.tabooproject.reflex.reflection.InstantClass
 import java.lang.reflect.Modifier
 
 /**
  * @author 坏黑
  * @since 2022/1/21 6:34 PM
  */
-class AsmClassMethod(name: String, owner: Class<*>, val descriptor: String, val access: Int) : JavaClassMethod(name, owner) {
+class AsmClassMethod(
+    name: String,
+    owner: Class<*>,
+    val descriptor: String,
+    val access: Int,
+    val parameterAnnotations: Map<Int, ArrayList<AsmAnnotation>>,
+    override val annotations: List<ClassAnnotation>,
+) : JavaClassMethod(name, owner) {
 
     lateinit var localResult: LazyClass
-    val localParameter = ArrayList<LazyClass>()
+
+    val localParameter = ArrayList<LazyAnnotatedClass>()
 
     override val result: LazyClass
         get() = localResult
 
-    override val parameter: List<LazyClass>
+    override val parameter: List<LazyAnnotatedClass>
         get() = localParameter
 
     override val isStatic: Boolean
         get() = Modifier.isStatic(access)
 
-    init {
+    fun read() {
         var visitParameterType = false
         var visitReturnType = false
         SignatureReader(descriptor).accept(object : SignatureWriter() {
@@ -44,22 +51,23 @@ class AsmClassMethod(name: String, owner: Class<*>, val descriptor: String, val 
             }
 
             override fun visitClassType(name: String) {
-                visit(LazyClass(name))
+                if (visitParameterType) {
+                    localParameter.add(LazyAnnotatedClass(name, parameterAnnotations[localParameter.size] ?: emptyList()))
+                }
+                if (visitReturnType) {
+                    localResult = LazyClass(name)
+                }
                 super.visitClassType(name)
             }
 
             override fun visitBaseType(descriptor: Char) {
-                visit(InstantClass(Reflection.getPrimitiveType(descriptor)))
-                super.visitBaseType(descriptor)
-            }
-
-            fun visit(lazyClass: LazyClass) {
                 if (visitParameterType) {
-                    localParameter.add(lazyClass)
+                    localParameter += InstantAnnotatedClass(Reflection.getPrimitiveType(descriptor), parameterAnnotations[localParameter.size] ?: emptyList())
                 }
                 if (visitReturnType) {
-                    localResult = lazyClass
+                    localResult = InstantClass(Reflection.getPrimitiveType(descriptor))
                 }
+                super.visitBaseType(descriptor)
             }
         })
     }

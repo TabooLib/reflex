@@ -1,35 +1,44 @@
 package org.tabooproject.reflex.asm
 
 import org.objectweb.asm.*
-import org.tabooproject.reflex.ClassConstructor
-import org.tabooproject.reflex.ClassField
-import org.tabooproject.reflex.ClassMethod
-import kotlin.collections.ArrayList
+import org.tabooproject.reflex.ClassAnnotation
 
 /**
  * @author izzel
  */
-class AsmClassVisitor(val owner: Class<*>, classVisitor: ClassVisitor, val excludeModifier: Int) : ClassVisitor(Opcodes.ASM9, classVisitor), Opcodes {
+class AsmClassVisitor(val owner: Class<*>, classVisitor: ClassVisitor) : ClassVisitor(Opcodes.ASM9, classVisitor), Opcodes {
 
-    val fields = ArrayList<ClassField>()
-    val methods = ArrayList<ClassMethod>()
-    val constructors = ArrayList<ClassConstructor>()
+    val annotations = ArrayList<ClassAnnotation>()
+    val fields = ArrayList<AsmClassField>()
+    val methods = ArrayList<AsmClassMethod>()
+    val constructors = ArrayList<AsmClassConstructor>()
+
+    override fun visitAnnotation(descriptor: String, visible: Boolean): AnnotationVisitor {
+        return AsmClassAnnotationVisitor(descriptor, super.visitAnnotation(descriptor, visible)).apply {
+            annotations += toAnnotation()
+        }
+    }
 
     override fun visitField(access: Int, name: String, descriptor: String, signature: String?, value: Any?): FieldVisitor {
-        if (access and excludeModifier == 0) {
-            fields.add(AsmClassField(name, owner, descriptor, access))
+        return AsmClassFieldVisitor(super.visitField(access, name, descriptor, signature, value)).apply {
+            fields += AsmClassField(name, owner, descriptor, access, annotations)
         }
-        return super.visitField(access, name, descriptor, signature, value)
     }
 
     override fun visitMethod(access: Int, name: String, descriptor: String, signature: String?, exceptions: Array<String>?): MethodVisitor {
-        if (access and excludeModifier == 0 && name != "<clinit>") {
+        if (name == "<clinit>") {
+            return super.visitMethod(access, name, descriptor, signature, exceptions)
+        }
+        return AsmClassMethodVisitor(super.visitMethod(access, name, descriptor, signature, exceptions)).apply {
             if (name == "<init>") {
-                constructors.add(AsmClassConstructor(name, owner, descriptor, access))
+                constructors += AsmClassConstructor(name, owner, descriptor, access, parameterAnnotations, annotations)
             } else {
-                methods.add(AsmClassMethod(name, owner, descriptor, access))
+                methods += AsmClassMethod(name, owner, descriptor, access, parameterAnnotations, annotations)
             }
         }
-        return super.visitMethod(access, name, descriptor, signature, exceptions)
+    }
+
+    override fun visitEnd() {
+        methods.forEach { it.read() }
     }
 }
