@@ -1,6 +1,7 @@
 package org.tabooproject.reflex
 
 import org.junit.jupiter.api.Test
+import org.tabooproject.reflex.asm.AsmAnnotation
 import org.tabooproject.reflex.reflection.InstantAnnotation
 import org.tabooproject.reflex.reflection.InstantClassConstructor
 
@@ -12,7 +13,7 @@ class AnalyserTestReflection {
 
     private val analyse = ClassAnalyser.analyse(TestTargetReflection::class.java)
 
-    @AnalyserAnnotation("test1")
+    @AnalyserAnnotation("test1", type = AnalyserAnnotation.Test.C)
     private class TestTargetReflection(val intVal: Int) {
 
         @AnalyserAnnotation("test2")
@@ -154,5 +155,12 @@ class AnalyserTestReflection {
         val annotation = analyse.getMethod("method", 0, 0).parameter[0].getAnnotation(AnalyserAnnotation::class.java)!!
         assert(annotation is InstantAnnotation)
         assert(annotation.property<String>("value") == "test5")
+    }
+
+    @Test
+    fun testClassAnnotationGetEnum() {
+        val annotation = analyse.getAnnotation(AnalyserAnnotation::class.java)!!
+        assert(annotation is InstantAnnotation)
+        assert(annotation.enum<AnalyserAnnotation.Test>("type") == AnalyserAnnotation.Test.C)
     }
 }

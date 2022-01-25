@@ -16,7 +16,7 @@ class AnalyserTestAsm {
 
     private val analyse = ClassAnalyser.analyse(TestTargetAsm::class.java)
 
-    @AnalyserAnnotation("test1")
+    @AnalyserAnnotation("test1", type = AnalyserAnnotation.Test.C)
     private class TestTargetAsm(private val intVal: Int) {
 
         @AnalyserAnnotation("test2")
@@ -183,5 +183,12 @@ class AnalyserTestAsm {
         val annotation = analyse.getMethod("method", 0).parameter[0].getAnnotation(AnalyserAnnotation::class.java)!!
         assert(annotation is AsmAnnotation)
         assert(annotation.property<String>("value") == "test5")
+    }
+
+    @Test
+    fun testClassAnnotationGetEnum() {
+        val annotation = analyse.getAnnotation(AnalyserAnnotation::class.java)!!
+        assert(annotation is AsmAnnotation)
+        assert(annotation.enum<AnalyserAnnotation.Test>("type") == AnalyserAnnotation.Test.C)
     }
 }

@@ -12,6 +12,12 @@ abstract class ClassAnnotation(val source: LazyClass) {
 
     abstract fun propertyKeys(): Set<String>
 
+    @Suppress("UNCHECKED_CAST")
+    fun <T> enum(name: String): T {
+        val value = property<Any>(name)!!
+        return if (value is LazyEnum) value.instance as T else value as T
+    }
+
     override fun toString(): String {
         return "ClassAnnotation(source=$source, properties=${propertyKeys()})"
     }

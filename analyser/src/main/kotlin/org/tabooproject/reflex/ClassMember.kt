@@ -14,6 +14,10 @@ abstract class ClassMember(val name: String, val owner: Class<*>) {
         return annotations.firstOrNull { it.source.name == annotation.name }
     }
 
+    fun isAnnotationPresent(annotation: Class<out Annotation>): Boolean {
+        return getAnnotation(annotation) != null
+    }
+
     override fun toString(): String {
         return "ClassMember(name='$name', owner=$owner, annotations=$annotations, isStatic=$isStatic)"
     }
