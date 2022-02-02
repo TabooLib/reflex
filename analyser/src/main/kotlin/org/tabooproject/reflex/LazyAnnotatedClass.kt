@@ -4,6 +4,7 @@ package org.tabooproject.reflex
  * @author 坏黑
  * @since 2022/1/21 6:47 PM
  */
+@Internal
 open class LazyAnnotatedClass(name: String, val annotations: List<ClassAnnotation>): LazyClass(name) {
 
     fun getAnnotation(annotation: Class<out Annotation>): ClassAnnotation? {

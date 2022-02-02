@@ -1,9 +1,6 @@
 package org.tabooproject.reflex.reflection
 
-import org.tabooproject.reflex.ClassAnnotation
-import org.tabooproject.reflex.JavaClassMethod
-import org.tabooproject.reflex.LazyAnnotatedClass
-import org.tabooproject.reflex.LazyClass
+import org.tabooproject.reflex.*
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 
@@ -11,6 +8,7 @@ import java.lang.reflect.Modifier
  * @author 坏黑
  * @since 2022/1/21 7:11 PM
  */
+@Internal
 class InstantClassMethod(owner: Class<*>, private val method: Method) : JavaClassMethod(method.name, owner) {
 
     val annotationsLocal by lazy {

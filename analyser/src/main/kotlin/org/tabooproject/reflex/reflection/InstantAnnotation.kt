@@ -1,11 +1,13 @@
 package org.tabooproject.reflex.reflection
 
 import org.tabooproject.reflex.ClassAnnotation
+import org.tabooproject.reflex.Internal
 
 /**
  * @author 坏黑
  * @since 2022/1/24 8:48 PM
  */
+@Internal
 class InstantAnnotation(val annotation: Annotation) : ClassAnnotation(InstantClass(annotation.annotationClass.java)) {
 
     val methods = source.instance!!.methods.filter { it.name !in internalMethods }.associateBy { it.name }

@@ -2,12 +2,14 @@ package org.tabooproject.reflex.asm
 
 import org.objectweb.asm.AnnotationVisitor
 import org.objectweb.asm.Opcodes
+import org.tabooproject.reflex.Internal
 import org.tabooproject.reflex.LazyEnum
 
 /**
  * @author 坏黑
  * @since 2022/1/24 9:11 PM
  */
+@Internal
 class AsmClassAnnotationVisitor(val descriptor: String, annotationVisitor: AnnotationVisitor, val fromArray: Boolean = false) :
     AnnotationVisitor(Opcodes.ASM9, annotationVisitor), Opcodes {
 

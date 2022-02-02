@@ -2,10 +2,12 @@ package org.tabooproject.reflex.asm
 
 import org.objectweb.asm.*
 import org.tabooproject.reflex.ClassAnnotation
+import org.tabooproject.reflex.Internal
 
 /**
  * @author izzel
  */
+@Internal
 class AsmClassVisitor(val owner: Class<*>, classVisitor: ClassVisitor) : ClassVisitor(Opcodes.ASM9, classVisitor), Opcodes {
 
     val annotations = ArrayList<ClassAnnotation>()

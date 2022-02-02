@@ -1,11 +1,13 @@
 package org.tabooproject.reflex.asm
 
 import org.tabooproject.reflex.ClassAnnotation
+import org.tabooproject.reflex.Internal
 
 /**
  * @author 坏黑
  * @since 2022/1/24 8:48 PM
  */
+@Internal
 class AsmAnnotation(val annotationVisitor: AsmClassAnnotationVisitor) : ClassAnnotation(annotationVisitor.source) {
 
     @Suppress("UNCHECKED_CAST")

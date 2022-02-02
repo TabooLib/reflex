@@ -7,6 +7,7 @@ package org.tabooproject.reflex
  * @author 坏黑
  * @since 2022/1/22 2:53 AM
  */
+@Internal
 class JavaClassStructure(
     owner: Class<*>,
     annotations: List<ClassAnnotation>,

@@ -2,10 +2,12 @@ package org.tabooproject.reflex.asm
 
 import org.objectweb.asm.signature.SignatureReader
 import org.objectweb.asm.signature.SignatureWriter
+import org.tabooproject.reflex.Internal
 import org.tabooproject.reflex.LazyClass
 import org.tabooproject.reflex.Reflection
 import org.tabooproject.reflex.reflection.InstantClass
 
+@Internal
 object AsmSignature {
 
     fun signatureToClass(signature: String): List<LazyClass> {

@@ -1,6 +1,7 @@
 package org.tabooproject.reflex.reflection
 
 import org.tabooproject.reflex.ClassAnnotation
+import org.tabooproject.reflex.Internal
 import org.tabooproject.reflex.JavaClassConstructor
 import org.tabooproject.reflex.LazyAnnotatedClass
 import java.lang.reflect.Constructor
@@ -9,6 +10,7 @@ import java.lang.reflect.Constructor
  * @author 坏黑
  * @since 2022/1/21 7:11 PM
  */
+@Internal
 class InstantClassConstructor(owner: Class<*>, private val constructor: Constructor<*>) : JavaClassConstructor("<init>", owner) {
 
     val annotationsLocal by lazy {

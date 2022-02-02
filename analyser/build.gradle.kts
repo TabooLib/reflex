@@ -6,3 +6,7 @@ dependencies {
     testImplementation(kotlin("stdlib"))
     testImplementation(kotlin("reflect"))
 }
+
+extensions.configure<org.tabooproject.shrinkingkt.ShrinkingExt> {
+    annotation = "org.tabooproject.reflex.Internal"
+}

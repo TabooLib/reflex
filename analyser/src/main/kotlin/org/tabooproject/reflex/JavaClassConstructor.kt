@@ -7,6 +7,7 @@ import java.lang.invoke.MethodType
  * @author 坏黑
  * @since 2022/1/21 10:15 PM
  */
+@Internal
 abstract class JavaClassConstructor(name: String, owner: Class<*>) : ClassConstructor(name, owner) {
 
     private val handle: MethodHandle by lazy {

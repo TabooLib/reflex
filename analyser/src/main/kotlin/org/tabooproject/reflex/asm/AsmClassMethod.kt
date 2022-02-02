@@ -12,6 +12,7 @@ import java.lang.reflect.Modifier
  * @author 坏黑
  * @since 2022/1/21 6:34 PM
  */
+@Internal
 class AsmClassMethod(
     name: String,
     owner: Class<*>,

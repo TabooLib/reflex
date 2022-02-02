@@ -4,11 +4,13 @@ import org.objectweb.asm.AnnotationVisitor
 import org.objectweb.asm.FieldVisitor
 import org.objectweb.asm.Opcodes
 import org.objectweb.asm.TypePath
+import org.tabooproject.reflex.Internal
 
 /**
  * @author 坏黑
  * @since 2022/1/24 9:11 PM
  */
+@Internal
 class AsmClassFieldVisitor(fieldVisitor: FieldVisitor) : FieldVisitor(Opcodes.ASM9, fieldVisitor), Opcodes {
 
     val annotations = ArrayList<AsmAnnotation>()

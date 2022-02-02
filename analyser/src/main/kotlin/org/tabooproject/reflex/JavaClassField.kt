@@ -6,6 +6,7 @@ import java.lang.invoke.MethodHandle
  * @author 坏黑
  * @since 2022/1/21 10:12 PM
  */
+@Internal
 abstract class JavaClassField(name: String, owner: Class<*>) : ClassField(name, owner) {
 
     private val handleGetter: MethodHandle by lazy {
