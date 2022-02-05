@@ -2,7 +2,7 @@ plugins {
     java
     `maven-publish`
     id("org.jetbrains.kotlin.jvm") version "1.5.10" apply false
-    id("org.tabooproject.shrinkingkt") version "1.0.1" apply false
+    id("org.tabooproject.shrinkingkt") version "1.0.2" apply false
 }
 
 subprojects {
