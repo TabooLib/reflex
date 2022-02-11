@@ -2,7 +2,7 @@ plugins {
     java
     `maven-publish`
     id("org.jetbrains.kotlin.jvm") version "1.5.10" apply false
-    id("org.tabooproject.shrinkingkt") version "1.0.2" apply false
+    id("org.tabooproject.shrinkingkt") version "1.0.5" apply false
 }
 
 subprojects {
@@ -26,6 +26,13 @@ subprojects {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
+
+    tasks {
+        test {
+            useJUnitPlatform()
+        }
+    }
+
     publishing {
         repositories {
             maven("http://ptms.ink:8081/repository/releases") {
@@ -43,12 +50,6 @@ subprojects {
             create<MavenPublication>("maven") {
                 from(components.findByName("java"))
             }
-        }
-    }
-
-    tasks {
-        test {
-            useJUnitPlatform()
         }
     }
 }
