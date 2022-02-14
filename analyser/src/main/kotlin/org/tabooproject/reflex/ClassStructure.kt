@@ -12,8 +12,9 @@ abstract class ClassStructure(
     val constructors: List<ClassConstructor>,
 ) {
 
-    val name: String = owner.name
-    val simpleName: String = owner.simpleName
+    val name by lazy { kotlin.runCatching { owner.name }.getOrNull() }
+
+    val simpleName by lazy { kotlin.runCatching { owner.simpleName }.getOrNull() }
 
     abstract fun getField(name: String): ClassField
 

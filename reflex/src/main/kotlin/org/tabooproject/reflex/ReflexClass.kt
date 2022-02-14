@@ -14,7 +14,7 @@ class ReflexClass(val structure: ClassStructure) {
     fun getField(name: String, findToParent: Boolean = true): ClassField {
         var field = name
         Reflex.remapper.forEach {
-            field = it.field(structure.name, field)
+            field = it.field(structure.name ?: return@forEach, field)
         }
         return try {
             structure.getField(name)
@@ -30,7 +30,7 @@ class ReflexClass(val structure: ClassStructure) {
     fun getMethod(name: String, findToParent: Boolean = true, vararg parameter: Any?): ClassMethod {
         var field = name
         Reflex.remapper.forEach {
-            field = it.method(structure.name, field)
+            field = it.method(structure.name ?: return@forEach, field)
         }
         return try {
             structure.getMethod(name, *parameter)

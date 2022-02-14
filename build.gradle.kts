@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     java
     `maven-publish`
@@ -21,16 +23,22 @@ subprojects {
         "testImplementation"("org.junit.jupiter:junit-jupiter-api:5.8.1")
     }
 
-    configure<JavaPluginConvention> {
+    configure<JavaPluginExtension> {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
+    tasks.withType<Test> {
+        useJUnitPlatform()
+    }
 
-    tasks {
-        test {
-            useJUnitPlatform()
-        }
+    tasks.withType<JavaCompile> {
+        options.encoding = "UTF-8"
+        options.compilerArgs.addAll(listOf("-XDenableSunApiLintControl"))
+    }
+
+    tasks.withType<KotlinCompile> {
+        kotlinOptions.freeCompilerArgs += listOf("-module-name", "${project.group}.${project.name}")
     }
 
     publishing {
