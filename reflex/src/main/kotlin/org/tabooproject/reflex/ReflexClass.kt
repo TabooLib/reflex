@@ -25,7 +25,7 @@ class ReflexClass(val structure: ClassStructure) {
             structure.getField(fixname)
         } catch (ex: NoSuchFieldException) {
             if (findToParent) {
-                superclass?.getField(fixname, true, remap) ?: throw ex
+                superclass?.getField(name, true, remap) ?: throw ex
             } else {
                 throw ex
             }
@@ -35,16 +35,16 @@ class ReflexClass(val structure: ClassStructure) {
     fun getMethod(name: String, findToParent: Boolean = true, remap: Boolean = true, vararg parameter: Any?): ClassMethod {
         var fixname = name
         if (remap) {
-            Reflex.remapper.forEach { fixname = it.method(structure.name ?: return@forEach, fixname) }
+            Reflex.remapper.forEach { fixname = it.method(structure.name ?: return@forEach, fixname, *parameter) }
         }
         return try {
             structure.getMethod(fixname, *parameter)
         } catch (ex: NoSuchMethodException) {
             if (findToParent) {
                 try {
-                    superclass?.getMethod(fixname, true, remap, *parameter) ?: throw ex
+                    superclass?.getMethod(name, true, remap, *parameter) ?: throw ex
                 } catch (ex: NoSuchMethodException) {
-                    interfaces.forEach { kotlin.runCatching { return it.getMethod(fixname, true, remap, *parameter) } }
+                    interfaces.forEach { kotlin.runCatching { return it.getMethod(name, true, remap, *parameter) } }
                     throw ex
                 }
             } else {

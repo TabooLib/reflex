@@ -17,27 +17,27 @@ class JavaClassStructure(
 ) : ClassStructure(owner, annotations, fields, methods, constructors) {
 
     override fun getField(name: String): ClassField {
-        return fields.firstOrNull { it.name == name } ?: throw NoSuchFieldException(name)
+        return fields.firstOrNull { it.name == name } ?: throw NoSuchFieldException("${this.name}#$name")
     }
 
     override fun getMethod(name: String, vararg parameter: Any?): ClassMethod {
         return methods.firstOrNull { it.name == name && Reflection.isAssignableFrom(it.parameterTypes, parameter.map { p -> p?.javaClass }.toTypedArray()) }
-            ?: throw NoSuchMethodException("$name(${parameter.joinToString(";") { it?.javaClass?.name ?: "null" }})")
+            ?: throw NoSuchMethodException("${this.name}#$name(${parameter.joinToString(";") { it?.javaClass?.name ?: "null" }})")
     }
 
     override fun getMethodByType(name: String, vararg parameter: Class<*>): ClassMethod {
         return methods.firstOrNull { it.name == name && Reflection.isAssignableFrom(it.parameterTypes, parameter.toList().toTypedArray()) }
-            ?: throw NoSuchMethodException("$name(${parameter.joinToString(";") { it.name }})")
+            ?: throw NoSuchMethodException("${this.name}#$name(${parameter.joinToString(";") { it.name }})")
     }
 
     override fun getConstructor(vararg parameter: Any?): ClassConstructor {
         return constructors.firstOrNull { Reflection.isAssignableFrom(it.parameterTypes, parameter.map { p -> p?.javaClass }.toTypedArray()) }
-            ?: throw NoSuchMethodException("<init>(${parameter.joinToString(";") { it?.javaClass?.name ?: "null" }})")
+            ?: throw NoSuchMethodException("${this.name}#<init>(${parameter.joinToString(";") { it?.javaClass?.name ?: "null" }})")
     }
 
     override fun getConstructorByType(vararg parameter: Class<*>): ClassConstructor {
         return constructors.firstOrNull { Reflection.isAssignableFrom(it.parameterTypes, parameter.toList().toTypedArray()) }
-            ?: throw NoSuchMethodException("<init>(${parameter.joinToString(";") { it.name }})")
+            ?: throw NoSuchMethodException("${this.name}#<init>(${parameter.joinToString(";") { it.name }})")
     }
 
     override fun getFieldSilently(name: String): ClassField? {
