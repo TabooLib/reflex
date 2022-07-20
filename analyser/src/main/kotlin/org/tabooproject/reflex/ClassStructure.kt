@@ -1,20 +1,34 @@
 package org.tabooproject.reflex
 
+import java.util.LinkedList
+
 /**
  * @author 坏黑
  * @since 2022/1/21 6:41 PM
  */
 abstract class ClassStructure(
     val owner: Class<*>,
-    val annotations: List<ClassAnnotation>,
-    val fields: List<ClassField>,
-    val methods: List<ClassMethod>,
-    val constructors: List<ClassConstructor>,
+    annotations: List<ClassAnnotation>,
+    fields: List<ClassField>,
+    methods: List<ClassMethod>,
+    constructors: List<ClassConstructor>,
 ) {
 
-    val name by lazy { kotlin.runCatching { owner.name }.getOrNull() }
+    val annotations = LinkedList(annotations)
 
-    val simpleName by lazy { kotlin.runCatching { owner.simpleName }.getOrNull() }
+    val fields = LinkedList(fields)
+
+    val methods = LinkedList(methods)
+
+    val constructors = LinkedList(constructors)
+
+    val name by lazy(LazyThreadSafetyMode.NONE) {
+        kotlin.runCatching { owner.name }.getOrNull()
+    }
+
+    val simpleName by lazy(LazyThreadSafetyMode.NONE) {
+        kotlin.runCatching { owner.simpleName }.getOrNull()
+    }
 
     abstract fun getField(name: String): ClassField
 

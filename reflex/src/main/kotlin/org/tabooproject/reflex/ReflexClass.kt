@@ -8,8 +8,13 @@ import java.util.concurrent.ConcurrentHashMap
  */
 class ReflexClass(val structure: ClassStructure) {
 
-    val superclass by lazy { if (structure.owner.superclass != Any::class.java) of(structure.owner.superclass) else null }
-    val interfaces by lazy { structure.owner.interfaces.map { of(it) } }
+    val superclass by lazy(LazyThreadSafetyMode.NONE) {
+        if (structure.owner.superclass != Any::class.java) of(structure.owner.superclass) else null
+    }
+
+    val interfaces by lazy(LazyThreadSafetyMode.NONE) {
+        structure.owner.interfaces.map { of(it) }
+    }
 
     fun getField(name: String, findToParent: Boolean = true): ClassField {
         var field = name
@@ -56,11 +61,15 @@ class ReflexClass(val structure: ClassStructure) {
 
         private val analyseMap = ConcurrentHashMap<String, ReflexClass>()
 
-        fun of(clazz: Class<*>): ReflexClass {
-            if (analyseMap.containsKey(clazz.name)) {
+        fun of(clazz: Class<*>, saving: Boolean = true): ReflexClass {
+            if (saving && analyseMap.containsKey(clazz.name)) {
                 return analyseMap[clazz.name]!!
             }
-            return ReflexClass(ClassAnalyser.analyse(clazz)).apply { analyseMap[clazz.name] = this }
+            return ReflexClass(ClassAnalyser.analyse(clazz)).apply {
+                if (saving) {
+                    analyseMap[clazz.name] = this
+                }
+            }
         }
     }
 }

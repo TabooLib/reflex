@@ -9,7 +9,7 @@ import java.lang.invoke.MethodHandle
 @Internal
 abstract class JavaClassField(name: String, owner: Class<*>) : ClassField(name, owner) {
 
-    private val handleGetter: MethodHandle by lazy {
+    private val handleGetter by lazy(LazyThreadSafetyMode.NONE) {
         if (isStatic) {
             UnsafeAccess.lookup.findStaticGetter(owner, name, fieldType)
         } else {
@@ -17,7 +17,7 @@ abstract class JavaClassField(name: String, owner: Class<*>) : ClassField(name, 
         }
     }
 
-    private val handleSetter: MethodHandle by lazy {
+    private val handleSetter by lazy(LazyThreadSafetyMode.NONE) {
         if (isStatic) {
             UnsafeAccess.lookup.findStaticSetter(owner, name, fieldType)
         } else {

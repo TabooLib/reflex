@@ -17,8 +17,9 @@ abstract class ClassMethod(name: String, owner: Class<*>) : ClassMember(name, ow
     val returnType: Class<*>
         get() = result.instance ?: Unknown::class.java
 
-    val parameterTypes: Array<Class<*>>
-        get() = parameter.map { p -> p.instance ?: Unknown::class.java }.toTypedArray()
+    val parameterTypes by lazy(LazyThreadSafetyMode.NONE) {
+        parameter.map { p -> p.instance ?: Unknown::class.java }.toTypedArray()
+    }
 
     override fun toString(): String {
         return "ClassMethod(result=$result)"

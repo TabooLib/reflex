@@ -33,12 +33,13 @@ class Reflex {
          * @param name 方法名称
          * @param parameter 方法参数
          * @param isStatic 是否为静态方法
+         * @param findToParent 是否查找父类方法
          */
-        fun <T> Any.invokeMethod(name: String, vararg parameter: Any?, isStatic: Boolean = false): T? {
+        fun <T> Any.invokeMethod(name: String, vararg parameter: Any?, isStatic: Boolean = false, findToParent: Boolean = true): T? {
             return if (isStatic && this is Class<*>) {
-                ReflexClass.of(this).getMethod(name, true, *parameter).invokeStatic(*parameter) as T?
+                ReflexClass.of(this).getMethod(name, findToParent, *parameter).invokeStatic(*parameter) as T?
             } else {
-                ReflexClass.of(javaClass).getMethod(name, true, *parameter).invoke(this, *parameter) as T?
+                ReflexClass.of(javaClass).getMethod(name, findToParent, *parameter).invoke(this, *parameter) as T?
             }
         }
 
@@ -46,12 +47,13 @@ class Reflex {
          * 获取字段
          * @param path 字段名称，使用 "/" 符号进行递归获取
          * @param isStatic 是否为静态字段
+         * @param findToParent 是否查找父类字段
          */
-        fun <T> Any.getProperty(path: String, isStatic: Boolean = false): T? {
+        fun <T> Any.getProperty(path: String, isStatic: Boolean = false, findToParent: Boolean = true): T? {
             return if (path.contains('/')) {
-                getLocalProperty<Any>(path.substringBefore('/'), isStatic)?.getProperty(path.substringAfter('/'), isStatic)
+                getLocalProperty<Any>(path.substringBefore('/'), isStatic)?.getProperty(path.substringAfter('/'), isStatic, findToParent)
             } else {
-                getLocalProperty(path, isStatic)
+                getLocalProperty(path, isStatic, findToParent)
             }
         }
 
@@ -60,28 +62,29 @@ class Reflex {
          * @param path 字段名称，使用 "/" 符号进行递归获取
          * @param value 值
          * @param isStatic 是否为静态字段
+         * @param findToParent 是否查找到父类字段
          */
-        fun Any.setProperty(path: String, value: Any?, isStatic: Boolean = false) {
+        fun Any.setProperty(path: String, value: Any?, isStatic: Boolean = false, findToParent: Boolean = true) {
             if (path.contains('/')) {
-                getLocalProperty<Any>(path.substringBefore('/'), isStatic)!!.setProperty(path.substringAfter('/'), value, isStatic)
+                getLocalProperty<Any>(path.substringBefore('/'), isStatic)!!.setProperty(path.substringAfter('/'), value, isStatic, findToParent)
             } else {
-                setLocalProperty(path, value, isStatic)
+                setLocalProperty(path, value, isStatic, findToParent)
             }
         }
 
-        private fun <T> Any.getLocalProperty(name: String, isStatic: Boolean = false): T? {
+        private fun <T> Any.getLocalProperty(name: String, isStatic: Boolean = false, findToParent: Boolean = true): T? {
             return if (isStatic && this is Class<*>) {
-                ReflexClass.of(this).getField(name, true).get() as T?
+                ReflexClass.of(this).getField(name, findToParent).get() as T?
             } else {
-                ReflexClass.of(javaClass).getField(name, true).get(this) as T?
+                ReflexClass.of(javaClass).getField(name, findToParent).get(this) as T?
             }
         }
 
-        private fun Any.setLocalProperty(name: String, value: Any?, isStatic: Boolean = false) {
+        private fun Any.setLocalProperty(name: String, value: Any?, isStatic: Boolean = false, findToParent: Boolean = true) {
             if (isStatic && this is Class<*>) {
-                ReflexClass.of(this).getField(name, true).setStatic(value)
+                ReflexClass.of(this).getField(name, findToParent).setStatic(value)
             } else {
-                ReflexClass.of(javaClass).getField(name, true).set(this, value)
+                ReflexClass.of(javaClass).getField(name, findToParent).set(this, value)
             }
         }
     }

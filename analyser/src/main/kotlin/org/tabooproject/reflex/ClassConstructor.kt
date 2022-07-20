@@ -10,8 +10,9 @@ abstract class ClassConstructor(name: String, owner: Class<*>) : ClassMember(nam
 
     abstract fun instance(vararg values: Any?): Any?
 
-    val parameterTypes: Array<Class<*>>
-        get() = parameter.map { p -> p.instance ?: Unknown::class.java }.toTypedArray()
+    val parameterTypes by lazy(LazyThreadSafetyMode.NONE) {
+        parameter.map { p -> p.instance ?: Unknown::class.java }.toTypedArray()
+    }
 
     override fun toString(): String {
         return "ClassConstructor(parameter=$parameter)"

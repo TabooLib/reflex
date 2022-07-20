@@ -7,10 +7,12 @@ import java.util.concurrent.ConcurrentHashMap
  * @author 坏黑
  * @since 2022/1/24 9:27 PM
  */
-@Suppress("UNCHECKED_CAST")
+@Suppress("UNCHECKED_CAST", "TYPE_MISMATCH_WARNING")
 class LazyEnum(val source: LazyClass, val name: String) {
 
-    val instance: Enum<*> by lazy { allOf(source.instance as Class<Enum<*>>)[name]!! }
+    val instance by lazy(LazyThreadSafetyMode.NONE) {
+        allOf(source.instance as Class<Enum<*>>)[name]!!
+    }
 
     override fun toString(): String {
         return "LazyEnum(source=$source, name='$name')"

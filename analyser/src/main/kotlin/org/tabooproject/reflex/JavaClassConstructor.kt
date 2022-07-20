@@ -10,7 +10,7 @@ import java.lang.invoke.MethodType
 @Internal
 abstract class JavaClassConstructor(name: String, owner: Class<*>) : ClassConstructor(name, owner) {
 
-    private val handle: MethodHandle by lazy {
+    private val handle by lazy(LazyThreadSafetyMode.NONE) {
         UnsafeAccess.lookup.findConstructor(owner, MethodType.methodType(Void.TYPE, parameterTypes))
     }
 

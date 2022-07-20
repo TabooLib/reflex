@@ -10,7 +10,7 @@ import java.lang.invoke.MethodType
 @Internal
 abstract class JavaClassMethod(name: String, owner: Class<*>) : ClassMethod(name, owner) {
 
-    private val handle: MethodHandle by lazy {
+    private val handle by lazy(LazyThreadSafetyMode.NONE) {
         if (isStatic) {
             UnsafeAccess.lookup.findStatic(owner, name, MethodType.methodType(returnType, parameterTypes))
         } else {
