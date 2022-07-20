@@ -1,7 +1,5 @@
 package org.tabooproject.reflex
 
-import java.lang.invoke.MethodHandle
-
 /**
  * @author 坏黑
  * @since 2022/1/21 10:12 PM
@@ -37,9 +35,8 @@ abstract class JavaClassField(name: String, owner: Class<*>) : ClassField(name, 
             } catch (ex: ClassCastException) {
                 if (src == StaticSrc) {
                     throw IllegalStateException("$name is not a static field", ex)
-                } else {
-                    throw IllegalStateException("${src?.javaClass?.name} is not an instance of ${owner.name}", ex)
                 }
+                throw ex
             }
         }
     }
@@ -56,9 +53,8 @@ abstract class JavaClassField(name: String, owner: Class<*>) : ClassField(name, 
             } catch (ex: ClassCastException) {
                 if (src == StaticSrc) {
                     throw IllegalStateException("$name is not a static field", ex)
-                } else {
-                    throw IllegalStateException("${src?.javaClass?.name} is not an instance of ${owner.name}", ex)
                 }
+                throw ex
             }
         }
     }
