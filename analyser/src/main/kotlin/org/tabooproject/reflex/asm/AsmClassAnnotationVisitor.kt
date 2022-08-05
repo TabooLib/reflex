@@ -26,16 +26,20 @@ class AsmClassAnnotationVisitor(val descriptor: String, annotationVisitor: Annot
         super.visit(name, value)
     }
 
-    override fun visitEnum(name: String, descriptor: String, value: String) {
+    override fun visitEnum(name: String?, descriptor: String, value: String) {
+        name ?: return super.visitEnum(null, descriptor, value)
         map[name] = LazyEnum(AsmSignature.signatureToClass(descriptor)[0], value)
         super.visitEnum(name, descriptor, value)
     }
 
-    override fun visitAnnotation(name: String, descriptor: String): AnnotationVisitor {
+    override fun visitAnnotation(name: String?, descriptor: String): AnnotationVisitor {
+        name ?: return super.visitAnnotation(null, descriptor)
         return AsmClassAnnotationVisitor(descriptor, super.visitAnnotation(name, descriptor)).apply { this@AsmClassAnnotationVisitor.map[name] = this }
+
     }
 
-    override fun visitArray(name: String): AnnotationVisitor {
+    override fun visitArray(name: String?): AnnotationVisitor {
+        name ?: return super.visitArray(null)
         return AsmClassAnnotationVisitor(descriptor, super.visitArray(name), true).apply { this@AsmClassAnnotationVisitor.map[name] = array }
     }
 
