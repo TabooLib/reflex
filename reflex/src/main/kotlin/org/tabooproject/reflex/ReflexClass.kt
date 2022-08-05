@@ -9,14 +9,15 @@ import java.util.concurrent.ConcurrentHashMap
 class ReflexClass(val structure: ClassStructure) {
 
     val superclass by lazy(LazyThreadSafetyMode.NONE) {
-        if (structure.owner.superclass != Any::class.java) of(structure.owner.superclass) else null
+        val clazz = structure.owner.superclass
+        if (clazz != Any::class.java && clazz != null) of(clazz) else null
     }
 
     val interfaces by lazy(LazyThreadSafetyMode.NONE) {
         structure.owner.interfaces.map { of(it) }
     }
 
-    fun getField(name: String, findToParent: Boolean = true, remap: Boolean = true, ): ClassField {
+    fun getField(name: String, findToParent: Boolean = true, remap: Boolean = true): ClassField {
         var fixname = name
         if (remap) {
             Reflex.remapper.forEach { fixname = it.field(structure.name ?: return@forEach, fixname) }
