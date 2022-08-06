@@ -16,16 +16,24 @@ object ClassAnalyser {
 
     fun analyse(clazz: Class<*>): ClassStructure {
         return try {
-            val annotations = clazz.declaredAnnotations.map { InstantAnnotation(it) }
-            val fields = clazz.declaredFields.map { InstantClassField(clazz, it) }
-            val methods = clazz.declaredMethods.map { InstantClassMethod(clazz, it) }
-            val constructors = clazz.declaredConstructors.map { InstantClassConstructor(clazz, it) }
-            JavaClassStructure(clazz, annotations, fields, methods, constructors)
+            analyseByReflection(clazz)
         } catch (ex: NoClassDefFoundError) {
-            val classReader = ClassReader(Objects.requireNonNull(clazz.getResourceAsStream("/${clazz.name.replace('.', '/')}.class")))
-            val analyser = AsmClassVisitor(clazz, ClassWriter(ClassWriter.COMPUTE_MAXS))
-            classReader.accept(analyser, ClassReader.SKIP_DEBUG)
-            JavaClassStructure(clazz, analyser.annotations, analyser.fields, analyser.methods, analyser.constructors)
+            analyseByASM(clazz)
         }
+    }
+
+    fun analyseByReflection(clazz: Class<*>): JavaClassStructure {
+        val annotations = clazz.declaredAnnotations.map { InstantAnnotation(it) }
+        val fields = clazz.declaredFields.map { InstantClassField(clazz, it) }
+        val methods = clazz.declaredMethods.map { InstantClassMethod(clazz, it) }
+        val constructors = clazz.declaredConstructors.map { InstantClassConstructor(clazz, it) }
+        return JavaClassStructure(clazz, annotations, fields, methods, constructors)
+    }
+
+    fun analyseByASM(clazz: Class<*>): JavaClassStructure {
+        val classReader = ClassReader(Objects.requireNonNull(clazz.getResourceAsStream("/${clazz.name.replace('.', '/')}.class")))
+        val analyser = AsmClassVisitor(clazz, ClassWriter(ClassWriter.COMPUTE_MAXS))
+        classReader.accept(analyser, ClassReader.SKIP_DEBUG)
+        return JavaClassStructure(clazz, analyser.annotations, analyser.fields, analyser.methods, analyser.constructors)
     }
 }

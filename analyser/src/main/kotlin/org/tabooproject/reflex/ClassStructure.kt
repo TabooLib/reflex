@@ -50,11 +50,9 @@ abstract class ClassStructure(
 
     abstract fun getConstructorByTypeSilently(vararg parameter: Class<*>): ClassConstructor?
 
-    abstract fun getAnnotation(annotation: Class<out Annotation>): ClassAnnotation?
+    abstract fun getAnnotation(annotation: Class<out Annotation>): ClassAnnotation
 
-    fun isAnnotationPresent(annotation: Class<out Annotation>): Boolean {
-        return getAnnotation(annotation) != null
-    }
+    abstract fun isAnnotationPresent(annotation: Class<out Annotation>): Boolean
 
     override fun toString(): String {
         return "ClassStructure(owner=$owner, fields=$fields, methods=$methods, constructors=$constructors)"

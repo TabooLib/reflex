@@ -33,14 +33,20 @@ class AsmClassAnnotationVisitor(val descriptor: String, annotationVisitor: Annot
     }
 
     override fun visitAnnotation(name: String?, descriptor: String): AnnotationVisitor {
-        name ?: return super.visitAnnotation(null, descriptor)
-        return AsmClassAnnotationVisitor(descriptor, super.visitAnnotation(name, descriptor)).apply { this@AsmClassAnnotationVisitor.map[name] = this }
+        return AsmClassAnnotationVisitor(descriptor, super.visitAnnotation(name, descriptor)).apply {
+            if (name != null) {
+                this@AsmClassAnnotationVisitor.map[name] = this
+            }
+        }
 
     }
 
     override fun visitArray(name: String?): AnnotationVisitor {
-        name ?: return super.visitArray(null)
-        return AsmClassAnnotationVisitor(descriptor, super.visitArray(name), true).apply { this@AsmClassAnnotationVisitor.map[name] = array }
+        return AsmClassAnnotationVisitor(descriptor, super.visitArray(name), true).apply {
+            if (name != null) {
+                this@AsmClassAnnotationVisitor.map[name] = array
+            }
+        }
     }
 
     fun toAnnotation(): AsmAnnotation {

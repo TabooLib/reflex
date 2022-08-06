@@ -7,8 +7,12 @@ package org.tabooproject.reflex
 @Internal
 open class LazyAnnotatedClass(name: String, val annotations: List<ClassAnnotation>): LazyClass(name) {
 
-    fun getAnnotation(annotation: Class<out Annotation>): ClassAnnotation? {
-        return annotations.firstOrNull { it.source.name == annotation.name }
+    fun getAnnotation(annotation: Class<out Annotation>): ClassAnnotation {
+        return annotations.first { it.source.name == annotation.name }
+    }
+
+    fun isAnnotationPresent(annotation: Class<out Annotation>): Boolean {
+        return annotations.any { it.source.name == annotation.name }
     }
 
     override fun toString(): String {

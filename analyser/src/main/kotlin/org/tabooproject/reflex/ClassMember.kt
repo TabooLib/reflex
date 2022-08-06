@@ -10,12 +10,12 @@ abstract class ClassMember(val name: String, val owner: Class<*>) {
 
     abstract val isStatic: Boolean
 
-    fun getAnnotation(annotation: Class<out Annotation>): ClassAnnotation? {
-        return annotations.firstOrNull { it.source.name == annotation.name }
+    fun getAnnotation(annotation: Class<out Annotation>): ClassAnnotation {
+        return annotations.first { it.source.name == annotation.name }
     }
 
     fun isAnnotationPresent(annotation: Class<out Annotation>): Boolean {
-        return getAnnotation(annotation) != null
+        return annotations.any { it.source.name == annotation.name }
     }
 
     override fun toString(): String {

@@ -60,7 +60,11 @@ class JavaClassStructure(
         return kotlin.runCatching { getConstructorByType(*parameter) }.getOrNull()
     }
 
-    override fun getAnnotation(annotation: Class<out Annotation>): ClassAnnotation? {
-        return annotations.firstOrNull { it.source.name == annotation.name }
+    override fun getAnnotation(annotation: Class<out Annotation>): ClassAnnotation {
+        return annotations.first { it.source.name == annotation.name }
+    }
+
+    override fun isAnnotationPresent(annotation: Class<out Annotation>): Boolean {
+        return annotations.any { it.source.name == annotation.name }
     }
 }

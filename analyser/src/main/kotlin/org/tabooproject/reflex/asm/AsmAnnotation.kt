@@ -15,6 +15,10 @@ class AsmAnnotation(val annotationVisitor: AsmClassAnnotationVisitor) : ClassAnn
         return annotationVisitor.map[name] as? T?
     }
 
+    override fun <T> property(name: String, def: T): T {
+        return property(name) ?: def
+    }
+
     override fun properties(): Map<String, Any> {
         return annotationVisitor.map
     }

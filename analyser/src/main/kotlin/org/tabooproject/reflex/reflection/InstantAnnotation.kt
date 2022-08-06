@@ -17,6 +17,10 @@ class InstantAnnotation(val annotation: Annotation) : ClassAnnotation(InstantCla
         return methods[name]?.invoke(annotation) as? T
     }
 
+    override fun <T> property(name: String, def: T): T {
+        return property(name) ?: def
+    }
+
     override fun properties(): Map<String, Any> {
         return methods.mapValues { it.value.invoke(annotation) }
     }
