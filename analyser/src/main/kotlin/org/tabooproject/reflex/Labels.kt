@@ -1,5 +1,5 @@
 package org.tabooproject.reflex
 
-internal class Unknown
+class Unknown
 
-internal object StaticSrc
+object StaticSrc
