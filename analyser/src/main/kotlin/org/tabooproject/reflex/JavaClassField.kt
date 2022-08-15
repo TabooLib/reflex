@@ -25,7 +25,7 @@ abstract class JavaClassField(name: String, owner: Class<*>) : ClassField(name, 
 
     override fun get(src: Any?): Any? {
         if (fieldType == Unknown::class.java) {
-            throw NoClassDefFoundError(type.name)
+            throw NoClassDefFoundError("${type.name}.$name (${owner})")
         }
         return if (isStatic) {
             handleGetter.invokeWithArguments()
@@ -43,7 +43,7 @@ abstract class JavaClassField(name: String, owner: Class<*>) : ClassField(name, 
 
     override fun set(src: Any?, value: Any?) {
         if (fieldType == Unknown::class.java) {
-            throw NoClassDefFoundError(type.name)
+            throw NoClassDefFoundError("${type.name}.$name (${owner})")
         }
         if (isStatic) {
             handleSetter.invokeWithArguments(value)
