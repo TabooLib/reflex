@@ -30,8 +30,14 @@ object ClassAnalyser {
         return JavaClassStructure(clazz, annotations, fields, methods, constructors)
     }
 
+    @Suppress("FoldInitializerAndIfToElvis")
     fun analyseByASM(clazz: Class<*>): JavaClassStructure {
-        val classReader = ClassReader(Objects.requireNonNull(clazz.getResourceAsStream("/${clazz.name.replace('.', '/')}.class")))
+        val resourceAsStream = clazz.getResourceAsStream("/${clazz.name.replace('.', '/')}.class")
+        if (resourceAsStream == null) {
+            // 无法从资源文件中找到对应的类文件，可能来自远程加载
+            throw IllegalStateException("Class ${clazz.name} not found (file not in the jar)")
+        }
+        val classReader = ClassReader(resourceAsStream)
         val analyser = AsmClassVisitor(clazz, ClassWriter(ClassWriter.COMPUTE_MAXS))
         classReader.accept(analyser, ClassReader.SKIP_DEBUG)
         return JavaClassStructure(clazz, analyser.annotations, analyser.fields, analyser.methods, analyser.constructors)
