@@ -59,7 +59,7 @@ public class AnyListener extends Listener {
 因此， Reflex 脱身于 [TabooLib](https://github.com/taboolib/taboolib) 并发展为独立类库。通过此类库，下述操作将成为可能：
 
 + 在 [AnalyserTestAsm.kt](https://github.com/TabooLib/Reflex/blob/master/analyser/src/test/kotlin/org/tabooproject/reflex/AnalyserTestAsm.kt) 中获取 `analyser` 的用法。
-+ 在 [ReflexTest.kt](https://github.com/TabooLib/Reflex/blob/master/reflex/src/test/kotlin/org/tabooproject/reflex/ReflexTest.kt) 中获取 `relfex` 的用法。
++ 在 [ReflexTest.kt](https://github.com/TabooLib/Reflex/blob/master/reflex/src/test/kotlin/org/tabooproject/reflex/ReflexTest.kt) 中获取 `reflex` 的用法。
 
 ## fast-instance-getter
 基于 Java 且不依赖反射的高性能 Kotlin 单例/伴生类实例获取工具，此工具同样解决了上述问题。
