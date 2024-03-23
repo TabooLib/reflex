@@ -20,7 +20,7 @@ object UnsafeAccess {
             theUnsafe.isAccessible = true
             unsafe = theUnsafe.get(null) as Unsafe
             try {
-                Unsafe::class.java.getDeclaredMethod("ensureClassInitialized").invoke(unsafe, MethodHandles.Lookup::class.java)
+                Unsafe::class.java.getDeclaredMethod("ensureClassInitialized", Class::class.java).invoke(unsafe, MethodHandles.Lookup::class.java)
             } catch (ignored: Throwable) {
                 // Fix JDK22 compatibility
                 MethodHandles.lookup().ensureInitialized(MethodHandles.Lookup::class.java)
