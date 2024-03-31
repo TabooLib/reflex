@@ -10,6 +10,14 @@ abstract class ClassMethod(name: String, owner: Class<*>) : ClassMember(name, ow
 
     abstract val parameter: List<LazyAnnotatedClass>
 
+    abstract val isNative: Boolean
+
+    abstract val isAbstract: Boolean
+
+    abstract val isVolatile: Boolean
+
+    abstract val isSynchronized: Boolean
+
     abstract fun invoke(src: Any, vararg values: Any?): Any?
 
     abstract fun invokeStatic(vararg values: Any?): Any?

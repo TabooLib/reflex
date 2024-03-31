@@ -45,7 +45,7 @@ class ReflexClass(val structure: ClassStructure) {
                 try {
                     superclass?.getMethod(name, true, remap, *parameter) ?: throw ex
                 } catch (ex: NoSuchMethodException) {
-                    interfaces.forEach { kotlin.runCatching { return it.getMethod(name, true, remap, *parameter) } }
+                    interfaces.forEach { runCatching { return it.getMethod(name, true, remap, *parameter) } }
                     throw ex
                 }
             } else {
@@ -61,8 +61,12 @@ class ReflexClass(val structure: ClassStructure) {
     companion object {
 
         private val analyseMap = ConcurrentHashMap<String, ReflexClass>()
+        
+        fun of(clazz: Class<*>): ReflexClass {
+            return of(clazz, true)
+        }
 
-        fun of(clazz: Class<*>, saving: Boolean = true): ReflexClass {
+        fun of(clazz: Class<*>, saving: Boolean): ReflexClass {
             if (saving && analyseMap.containsKey(clazz.name)) {
                 return analyseMap[clazz.name]!!
             }

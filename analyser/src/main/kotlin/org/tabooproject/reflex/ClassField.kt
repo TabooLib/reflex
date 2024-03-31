@@ -8,6 +8,8 @@ abstract class ClassField(name: String, owner: Class<*>) : ClassMember(name, own
 
     abstract val type: LazyClass
 
+    abstract val isTransient: Boolean
+
     abstract fun get(src: Any? = null): Any?
 
     abstract fun set(src: Any? = null, value: Any?)

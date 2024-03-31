@@ -41,23 +41,23 @@ class JavaClassStructure(
     }
 
     override fun getFieldSilently(name: String): ClassField? {
-        return kotlin.runCatching { getField(name) }.getOrNull()
+        return runCatching { getField(name) }.getOrNull()
     }
 
     override fun getMethodSilently(name: String, vararg parameter: Any?): ClassMethod? {
-        return kotlin.runCatching { getMethod(name, *parameter) }.getOrNull()
+        return runCatching { getMethod(name, *parameter) }.getOrNull()
     }
 
     override fun getMethodByTypeSilently(name: String, vararg parameter: Class<*>): ClassMethod? {
-        return kotlin.runCatching { getMethodByType(name, *parameter) }.getOrNull()
+        return runCatching { getMethodByType(name, *parameter) }.getOrNull()
     }
 
     override fun getConstructorSilently(vararg parameter: Any?): ClassConstructor? {
-        return kotlin.runCatching { getConstructor(*parameter) }.getOrNull()
+        return runCatching { getConstructor(*parameter) }.getOrNull()
     }
 
     override fun getConstructorByTypeSilently(vararg parameter: Class<*>): ClassConstructor? {
-        return kotlin.runCatching { getConstructorByType(*parameter) }.getOrNull()
+        return runCatching { getConstructorByType(*parameter) }.getOrNull()
     }
 
     override fun getAnnotation(annotation: Class<out Annotation>): ClassAnnotation {

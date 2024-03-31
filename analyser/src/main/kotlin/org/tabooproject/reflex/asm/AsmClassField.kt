@@ -22,6 +22,21 @@ class AsmClassField(name: String, owner: Class<*>, val descriptor: String, val a
     override val isStatic: Boolean
         get() = Modifier.isStatic(access)
 
+    override val isTransient: Boolean
+        get() = Modifier.isTransient(access)
+
+    override val isFinal: Boolean
+        get() = Modifier.isFinal(access)
+
+    override val isPublic: Boolean
+        get() = Modifier.isPublic(access)
+
+    override val isProtected: Boolean
+        get() = Modifier.isProtected(access)
+
+    override val isPrivate: Boolean
+        get() = Modifier.isPrivate(access)
+
     init {
         SignatureReader(descriptor).accept(object : SignatureWriter() {
 

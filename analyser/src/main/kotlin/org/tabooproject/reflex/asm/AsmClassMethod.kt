@@ -35,6 +35,30 @@ class AsmClassMethod(
     override val isStatic: Boolean
         get() = Modifier.isStatic(access)
 
+    override val isFinal: Boolean
+        get() = Modifier.isFinal(access)
+
+    override val isPublic: Boolean
+        get() = Modifier.isPublic(access)
+
+    override val isProtected: Boolean
+        get() = Modifier.isProtected(access)
+
+    override val isPrivate: Boolean
+        get() = Modifier.isPrivate(access)
+
+    override val isNative: Boolean
+        get() = Modifier.isNative(access)
+
+    override val isAbstract: Boolean
+        get() = Modifier.isAbstract(access)
+
+    override val isVolatile: Boolean
+        get() = Modifier.isVolatile(access)
+
+    override val isSynchronized: Boolean
+        get() = Modifier.isSynchronized(access)
+
     fun read() {
         var visitParameterType = false
         var visitReturnType = false

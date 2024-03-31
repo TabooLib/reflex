@@ -8,7 +8,7 @@ open class LazyClass(source: String) {
 
     val name = source.replace('/', '.')
 
-    open val instance by lazy(LazyThreadSafetyMode.NONE) { kotlin.runCatching { Class.forName(name) }.getOrNull() }
+    open val instance by lazy(LazyThreadSafetyMode.NONE) { runCatching { Class.forName(name) }.getOrNull() }
 
     override fun toString(): String {
         return "LazyClass(name='$name')"

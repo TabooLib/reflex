@@ -7,7 +7,7 @@ import java.util.concurrent.ConcurrentHashMap
  * @author 坏黑
  * @since 2022/1/24 9:27 PM
  */
-@Suppress("UNCHECKED_CAST", "TYPE_MISMATCH_WARNING")
+@Suppress("UNCHECKED_CAST")
 class LazyEnum(val source: LazyClass, val name: String) {
 
     val instance by lazy(LazyThreadSafetyMode.NONE) {
@@ -23,7 +23,7 @@ class LazyEnum(val source: LazyClass, val name: String) {
         val map = ConcurrentHashMap<String, Map<String, Enum<*>>>()
 
         fun allOf(enumClass: Class<Enum<*>>): Map<String, Enum<*>> {
-            return map.computeIfAbsent(enumClass.name) { EnumSet.allOf(enumClass).associateBy { it.name } }
+            return map.computeIfAbsent(enumClass.name) { enumClass.enumConstants.associateBy { (it as Enum<*>).name } }
         }
     }
 }

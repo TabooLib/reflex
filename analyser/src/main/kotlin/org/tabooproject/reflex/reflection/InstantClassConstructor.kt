@@ -5,6 +5,7 @@ import org.tabooproject.reflex.Internal
 import org.tabooproject.reflex.JavaClassConstructor
 import org.tabooproject.reflex.LazyAnnotatedClass
 import java.lang.reflect.Constructor
+import java.lang.reflect.Modifier
 
 /**
  * @author 坏黑
@@ -24,6 +25,18 @@ class InstantClassConstructor(owner: Class<*>, private val constructor: Construc
 
     override val isStatic: Boolean
         get() = true
+
+    override val isFinal: Boolean
+        get() = true
+
+    override val isPublic: Boolean
+        get() = Modifier.isPublic(constructor.modifiers)
+
+    override val isProtected: Boolean
+        get() = Modifier.isProtected(constructor.modifiers)
+
+    override val isPrivate: Boolean
+        get() = Modifier.isPrivate(constructor.modifiers)
 
     override val parameter: List<LazyAnnotatedClass>
         get() = parameterLocal

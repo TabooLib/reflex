@@ -19,8 +19,23 @@ class InstantClassField(owner: Class<*>, private val field: Field) : JavaClassFi
     override val type: LazyClass
         get() = InstantClass(this.field.type)
 
+    override val isTransient: Boolean
+        get() = Modifier.isTransient(this.field.modifiers)
+
     override val isStatic: Boolean
         get() = Modifier.isStatic(this.field.modifiers)
+
+    override val isFinal: Boolean
+        get() = Modifier.isFinal(this.field.modifiers)
+
+    override val isPublic: Boolean
+        get() = Modifier.isPublic(this.field.modifiers)
+
+    override val isProtected: Boolean
+        get() = Modifier.isProtected(this.field.modifiers)
+
+    override val isPrivate: Boolean
+        get() = Modifier.isPrivate(this.field.modifiers)
 
     override val annotations: List<ClassAnnotation>
         get() = annotationsLocal

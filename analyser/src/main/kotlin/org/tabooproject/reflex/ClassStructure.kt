@@ -23,11 +23,11 @@ abstract class ClassStructure(
     val constructors = LinkedList(constructors)
 
     val name by lazy(LazyThreadSafetyMode.NONE) {
-        kotlin.runCatching { owner.name }.getOrNull()
+        runCatching { owner.name }.getOrNull()
     }
 
     val simpleName by lazy(LazyThreadSafetyMode.NONE) {
-        kotlin.runCatching { owner.simpleName }.getOrNull()
+        runCatching { owner.simpleName }.getOrNull()
     }
 
     abstract fun getField(name: String): ClassField

@@ -20,8 +20,7 @@ class AsmClassConstructor(
     val access: Int,
     val parameterAnnotations: Map<Int, ArrayList<AsmAnnotation>>,
     override val annotations: List<ClassAnnotation>,
-) :
-    JavaClassConstructor(name, owner) {
+) : JavaClassConstructor(name, owner) {
 
     val localParameter = AsmSignature.signatureToClass(descriptor).mapIndexed { idx, it ->
         if (it is InstantClass) {
@@ -35,7 +34,19 @@ class AsmClassConstructor(
         get() = localParameter
 
     override val isStatic: Boolean
-        get() = Modifier.isStatic(access)
+        get() = true
+
+    override val isFinal: Boolean
+        get() = true
+
+    override val isPublic: Boolean
+        get() = Modifier.isPublic(access)
+
+    override val isProtected: Boolean
+        get() = Modifier.isProtected(access)
+
+    override val isPrivate: Boolean
+        get() = Modifier.isPrivate(access)
 
     override fun toString(): String {
         return "AsmClassConstructor(descriptor='$descriptor', access=$access) ${super.toString()}"
