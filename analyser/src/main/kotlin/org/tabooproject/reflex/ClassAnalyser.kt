@@ -7,7 +7,6 @@ import org.tabooproject.reflex.reflection.InstantAnnotation
 import org.tabooproject.reflex.reflection.InstantClassConstructor
 import org.tabooproject.reflex.reflection.InstantClassField
 import org.tabooproject.reflex.reflection.InstantClassMethod
-import java.util.*
 
 /**
  * @author 坏黑
@@ -17,8 +16,11 @@ object ClassAnalyser {
     fun analyse(clazz: Class<*>): ClassStructure {
         return try {
             analyseByReflection(clazz)
-        } catch (ex: NoClassDefFoundError) {
-            analyseByASM(clazz)
+        } catch (ex: Throwable) {
+            when (ex) {
+                is NoClassDefFoundError, is ArrayStoreException -> analyseByASM(clazz)
+                else -> throw ex
+            }
         }
     }
 
