@@ -53,6 +53,7 @@ subprojects {
                     create<BasicAuthentication>("basic")
                 }
             }
+            mavenLocal()
         }
         publications {
             create<MavenPublication>("maven") {

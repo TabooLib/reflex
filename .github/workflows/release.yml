@@ -10,11 +10,11 @@ jobs:
         uses: actions/checkout@v2
       - name: validate gradle wrapper
         uses: gradle/wrapper-validation-action@v1
-      - name: setup jdk 17
+      - name: setup jdk 22
         uses: actions/setup-java@v2
         with:
           distribution: adopt
-          java-version: '17'
+          java-version: '22'
       - name: make gradle wrapper executable
         run: chmod +x ./gradlew
       - name: build

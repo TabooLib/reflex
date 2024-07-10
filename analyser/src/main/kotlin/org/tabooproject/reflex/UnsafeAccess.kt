@@ -23,7 +23,8 @@ object UnsafeAccess {
                 Unsafe::class.java.getDeclaredMethod("ensureClassInitialized", Class::class.java).invoke(unsafe, MethodHandles.Lookup::class.java)
             } catch (ignored: Throwable) {
                 // Fix JDK22 compatibility
-                MethodHandles.lookup().ensureInitialized(MethodHandles.Lookup::class.java)
+                // MethodHandles.lookup().ensureInitialized(MethodHandles.Lookup::class.java)
+                MethodHandles.Lookup::class.java.getDeclaredMethod("ensureInitialized").invoke(MethodHandles.Lookup::class.java)
             }
             val lookupField = MethodHandles.Lookup::class.java.getDeclaredField("IMPL_LOOKUP")
             val lookupBase = unsafe.staticFieldBase(lookupField)
