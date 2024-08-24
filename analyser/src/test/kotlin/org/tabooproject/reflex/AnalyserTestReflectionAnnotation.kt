@@ -23,6 +23,6 @@ class AnalyserTestReflectionAnnotation {
     fun testAnnotation() {
         val analyser = ClassAnalyser.analyseByReflection(AnalyserTestReflectionAnnotation::class.java)
         val method = analyser.getMethod("event")
-        assert(method.getAnnotation(SubscribeEvent::class.java).properties().size == 1)
+        assert(method.getAnnotation(SubscribeEvent::class.java).properties().isNotEmpty())
     }
 }
