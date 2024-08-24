@@ -18,12 +18,12 @@ class ReflexClass(val structure: ClassStructure) {
     }
 
     fun getField(name: String, findToParent: Boolean = true, remap: Boolean = true): ClassField {
-        var fixname = name
+        var fixed = name
         if (remap) {
-            Reflex.remapper.forEach { fixname = it.field(structure.name ?: return@forEach, fixname) }
+            Reflex.remapper.forEach { fixed = it.field(structure.name ?: return@forEach, fixed) }
         }
         return try {
-            structure.getField(fixname)
+            structure.getField(fixed)
         } catch (ex: NoSuchFieldException) {
             if (findToParent) {
                 superclass?.getField(name, true, remap) ?: throw ex
@@ -34,12 +34,12 @@ class ReflexClass(val structure: ClassStructure) {
     }
 
     fun getMethod(name: String, findToParent: Boolean = true, remap: Boolean = true, vararg parameter: Any?): ClassMethod {
-        var fixname = name
+        var fixed = name
         if (remap) {
-            Reflex.remapper.forEach { fixname = it.method(structure.name ?: return@forEach, fixname, *parameter) }
+            Reflex.remapper.forEach { fixed = it.method(structure.name ?: return@forEach, fixed, *parameter) }
         }
         return try {
-            structure.getMethod(fixname, *parameter)
+            structure.getMethod(fixed, *parameter)
         } catch (ex: NoSuchMethodException) {
             if (findToParent) {
                 try {
@@ -61,16 +61,24 @@ class ReflexClass(val structure: ClassStructure) {
     companion object {
 
         private val analyseMap = ConcurrentHashMap<String, ReflexClass>()
-        
+
         fun of(clazz: Class<*>): ReflexClass {
             return of(clazz, true)
         }
 
+        fun of(clazz: Class<*>, mode: AnalyseMode): ReflexClass {
+            return of(clazz, mode, true)
+        }
+
         fun of(clazz: Class<*>, saving: Boolean): ReflexClass {
+            return of(clazz, AnalyseMode.REFLECTION_FIRST, saving)
+        }
+
+        fun of(clazz: Class<*>, mode: AnalyseMode, saving: Boolean): ReflexClass {
             if (saving && analyseMap.containsKey(clazz.name)) {
                 return analyseMap[clazz.name]!!
             }
-            return ReflexClass(ClassAnalyser.analyse(clazz)).apply {
+            return ReflexClass(ClassAnalyser.analyse(clazz, mode)).apply {
                 if (saving) {
                     analyseMap[clazz.name] = this
                 }

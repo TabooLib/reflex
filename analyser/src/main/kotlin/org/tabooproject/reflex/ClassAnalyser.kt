@@ -14,13 +14,37 @@ import org.tabooproject.reflex.reflection.InstantClassMethod
 object ClassAnalyser {
 
     fun analyse(clazz: Class<*>): ClassStructure {
-        return try {
-            analyseByReflection(clazz)
-        } catch (ex: Throwable) {
-            when (ex) {
-                is NoClassDefFoundError, is ArrayStoreException -> analyseByASM(clazz)
-                else -> throw ex
+        return analyse(clazz, AnalyseMode.REFLECTION_FIRST)
+    }
+
+    fun analyse(clazz: Class<*>, mode: AnalyseMode): ClassStructure {
+        return when (mode) {
+            // 反射优先
+            AnalyseMode.REFLECTION_FIRST -> {
+                return try {
+                    analyseByReflection(clazz)
+                } catch (ex: Throwable) {
+                    when (ex) {
+                        is NoClassDefFoundError, is ArrayStoreException -> analyseByASM(clazz)
+                        else -> throw ex
+                    }
+                }
             }
+            // 仅反射
+            AnalyseMode.REFLECTION_ONLY -> analyseByReflection(clazz)
+            // ASM 优先
+            AnalyseMode.ASM_FIRST -> {
+                return try {
+                    analyseByASM(clazz)
+                } catch (ex: Throwable) {
+                    when (ex) {
+                        is ClassNotFoundException -> analyseByReflection(clazz)
+                        else -> throw ex
+                    }
+                }
+            }
+            // 仅 ASM
+            AnalyseMode.ASM_ONLY -> analyseByASM(clazz)
         }
     }
 
@@ -37,7 +61,7 @@ object ClassAnalyser {
         val resourceAsStream = clazz.getResourceAsStream("/${clazz.name.replace('.', '/')}.class")
         if (resourceAsStream == null) {
             // 无法从资源文件中找到对应的类文件，可能来自远程加载
-            throw IllegalStateException("Class ${clazz.name} not found (file not in the jar)")
+            throw ClassNotFoundException("Class ${clazz.name} not found (file not in the jar)")
         }
         val classReader = ClassReader(resourceAsStream)
         val analyser = AsmClassVisitor(clazz, ClassWriter(ClassWriter.COMPUTE_MAXS))
