@@ -66,19 +66,23 @@ abstract class ClassAnnotation(val source: LazyClass) {
 
     // 当时起这名字没想到 Java 无法访问，我笑了。
     fun <T> enum(name: String): T {
-        return property<LazyEnum>(name)?.instance as T ?: throw EnumNotFoundException(name)
+        val el = property<Any?>(name) ?: throw EnumNotFoundException(name)
+        return if (el is LazyEnum) el.instance as T else el as T
     }
 
     fun <T> enum(name: String, def: T): T {
-        return property<LazyEnum>(name)?.instance as T ?: def
+        val el = property<Any?>(name) ?: return def
+        return if (el is LazyEnum) el.instance as T else el as T
     }
 
     fun enumName(name: String): String {
-        return property<LazyEnum>(name)?.name ?: throw EnumNotFoundException(name)
+        val el = property<Any?>(name) ?: throw EnumNotFoundException(name)
+        return if (el is LazyEnum) el.name else el.toString()
     }
 
     fun enumName(name: String, def: String): String {
-        return property<LazyEnum>(name)?.name ?: def
+        val el = property<Any?>(name) ?: return def
+        return if (el is LazyEnum) el.name else el.toString()
     }
 
     fun <T> enumList(name: String): List<T> {
