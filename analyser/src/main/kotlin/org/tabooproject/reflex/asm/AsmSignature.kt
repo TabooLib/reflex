@@ -2,26 +2,26 @@ package org.tabooproject.reflex.asm
 
 import org.objectweb.asm.signature.SignatureReader
 import org.objectweb.asm.signature.SignatureWriter
+import org.tabooproject.reflex.ClassAnalyser
 import org.tabooproject.reflex.Internal
 import org.tabooproject.reflex.LazyClass
 import org.tabooproject.reflex.Reflection
-import org.tabooproject.reflex.reflection.InstantClass
 
 @Internal
 object AsmSignature {
 
-    fun signatureToClass(signature: String): List<LazyClass> {
+    fun signatureToClass(signature: String, classFinder: ClassAnalyser.ClassFinder): List<LazyClass> {
         val list = ArrayList<LazyClass>()
         SignatureReader(signature).accept(object : SignatureWriter() {
 
             override fun visitClassType(name: String) {
-                list.add(LazyClass(name))
                 super.visitClassType(name)
+                list.add(LazyClass.of(name, classFinder))
             }
 
             override fun visitBaseType(descriptor: Char) {
-                list.add(InstantClass(Reflection.getPrimitiveType(descriptor)))
                 super.visitBaseType(descriptor)
+                list.add(LazyClass.of(Reflection.getPrimitiveType(descriptor)))
             }
         })
         if (list.lastOrNull()?.name == "void") {

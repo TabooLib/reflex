@@ -4,7 +4,7 @@ package org.tabooproject.reflex
  * @author 坏黑
  * @since 2022/1/21 6:41 PM
  */
-abstract class ClassMethod(name: String, owner: Class<*>) : ClassMember(name, owner) {
+abstract class ClassMethod(name: String, owner: LazyClass) : ClassMember(name, owner) {
 
     abstract val result: LazyClass
 

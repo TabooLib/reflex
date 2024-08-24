@@ -7,13 +7,13 @@ import java.lang.invoke.MethodType
  * @since 2022/1/21 10:17 PM
  */
 @Internal
-abstract class JavaClassMethod(name: String, owner: Class<*>) : ClassMethod(name, owner) {
+abstract class JavaClassMethod(name: String, owner: LazyClass) : ClassMethod(name, owner) {
 
     private val handle by lazy(LazyThreadSafetyMode.NONE) {
         if (isStatic) {
-            UnsafeAccess.lookup.findStatic(owner, name, MethodType.methodType(returnType, parameterTypes))
+            UnsafeAccess.lookup.findStatic(owner.instance, name, MethodType.methodType(returnType, parameterTypes))
         } else {
-            UnsafeAccess.lookup.findVirtual(owner, name, MethodType.methodType(returnType, parameterTypes))
+            UnsafeAccess.lookup.findVirtual(owner.instance, name, MethodType.methodType(returnType, parameterTypes))
         }
     }
 

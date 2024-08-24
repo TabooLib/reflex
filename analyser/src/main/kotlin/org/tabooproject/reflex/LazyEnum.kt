@@ -1,6 +1,5 @@
 package org.tabooproject.reflex
 
-import java.util.*
 import java.util.concurrent.ConcurrentHashMap
 
 /**
@@ -18,12 +17,12 @@ class LazyEnum(val source: LazyClass, val name: String) {
         return "LazyEnum(source=$source, name='$name')"
     }
 
-    private companion object {
+    companion object {
 
         val map = ConcurrentHashMap<String, Map<String, Enum<*>>>()
 
         fun allOf(enumClass: Class<Enum<*>>): Map<String, Enum<*>> {
-            return map.computeIfAbsent(enumClass.name) { enumClass.enumConstants.associateBy { (it as Enum<*>).name } }
+            return map.getOrPut(enumClass.name) { enumClass.enumConstants.associateBy { (it as Enum<*>).name } }
         }
     }
 }

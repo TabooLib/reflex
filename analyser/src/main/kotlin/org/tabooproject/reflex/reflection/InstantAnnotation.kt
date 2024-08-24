@@ -2,13 +2,14 @@ package org.tabooproject.reflex.reflection
 
 import org.tabooproject.reflex.ClassAnnotation
 import org.tabooproject.reflex.Internal
+import org.tabooproject.reflex.LazyClass
 
 /**
  * @author 坏黑
  * @since 2022/1/24 8:48 PM
  */
 @Internal
-class InstantAnnotation(val annotation: Annotation) : ClassAnnotation(InstantClass(annotation.annotationClass.java)) {
+class InstantAnnotation(val annotation: Annotation) : ClassAnnotation(LazyClass.of(annotation.annotationClass.java)) {
 
     val methods = source.instance!!.methods.filter { it.name !in internalMethods }.associateBy { it.name }
 

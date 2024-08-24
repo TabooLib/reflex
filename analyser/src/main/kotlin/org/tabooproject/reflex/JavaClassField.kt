@@ -5,21 +5,21 @@ package org.tabooproject.reflex
  * @since 2022/1/21 10:12 PM
  */
 @Internal
-abstract class JavaClassField(name: String, owner: Class<*>) : ClassField(name, owner) {
+abstract class JavaClassField(name: String, owner: LazyClass) : ClassField(name, owner) {
 
     private val handleGetter by lazy(LazyThreadSafetyMode.NONE) {
         if (isStatic) {
-            UnsafeAccess.lookup.findStaticGetter(owner, name, fieldType)
+            UnsafeAccess.lookup.findStaticGetter(owner.instance, name, fieldType)
         } else {
-            UnsafeAccess.lookup.findGetter(owner, name, fieldType)
+            UnsafeAccess.lookup.findGetter(owner.instance, name, fieldType)
         }
     }
 
     private val handleSetter by lazy(LazyThreadSafetyMode.NONE) {
         if (isStatic) {
-            UnsafeAccess.lookup.findStaticSetter(owner, name, fieldType)
+            UnsafeAccess.lookup.findStaticSetter(owner.instance, name, fieldType)
         } else {
-            UnsafeAccess.lookup.findSetter(owner, name, fieldType)
+            UnsafeAccess.lookup.findSetter(owner.instance, name, fieldType)
         }
     }
 

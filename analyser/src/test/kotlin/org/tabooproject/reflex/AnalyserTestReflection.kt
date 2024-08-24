@@ -124,42 +124,42 @@ class AnalyserTestReflection {
 
     @Test
     fun testClassAnnotationGet1() {
-        val annotation = analyse.getAnnotation(AnalyserAnnotation::class.java)!!
+        val annotation = analyse.getAnnotation(AnalyserAnnotation::class.java)
         assert(annotation is InstantAnnotation)
         assert(annotation.property<String>("value") == "test1")
     }
 
     @Test
     fun testClassAnnotationGet2() {
-        val annotation = analyse.getField("stringVar").getAnnotation(AnalyserAnnotation::class.java)!!
+        val annotation = analyse.getField("stringVar").getAnnotation(AnalyserAnnotation::class.java)
         assert(annotation is InstantAnnotation)
         assert(annotation.property<String>("value") == "test2")
     }
 
     @Test
     fun testClassAnnotationGet3() {
-        val annotation = analyse.getConstructor().getAnnotation(AnalyserAnnotation::class.java)!!
+        val annotation = analyse.getConstructor().getAnnotation(AnalyserAnnotation::class.java)
         assert(annotation is InstantAnnotation)
         assert(annotation.property<String>("value") == "test3")
     }
 
     @Test
     fun testClassAnnotationGet4() {
-        val annotation = analyse.getMethod("method", 0, 0).getAnnotation(AnalyserAnnotation::class.java)!!
+        val annotation = analyse.getMethod("method", 0, 0).getAnnotation(AnalyserAnnotation::class.java)
         assert(annotation is InstantAnnotation)
         assert(annotation.property<String>("value") == "test4")
     }
 
     @Test
     fun testClassAnnotationGet5() {
-        val annotation = analyse.getMethod("method", 0, 0).parameter[0].getAnnotation(AnalyserAnnotation::class.java)!!
+        val annotation = analyse.getMethod("method", 0, 0).parameter[0].getAnnotation(AnalyserAnnotation::class.java)
         assert(annotation is InstantAnnotation)
         assert(annotation.property<String>("value") == "test5")
     }
 
     @Test
     fun testClassAnnotationGetEnum() {
-        val annotation = analyse.getAnnotation(AnalyserAnnotation::class.java)!!
+        val annotation = analyse.getAnnotation(AnalyserAnnotation::class.java)
         assert(annotation is InstantAnnotation)
         assert(annotation.enum<AnalyserAnnotation.Test>("type") == AnalyserAnnotation.Test.C)
     }

@@ -9,7 +9,7 @@ import java.lang.reflect.Modifier
  * @since 2022/1/21 7:11 PM
  */
 @Internal
-class InstantClassMethod(owner: Class<*>, private val method: Method) : JavaClassMethod(method.name, owner) {
+class InstantClassMethod(owner: LazyClass, private val method: Method) : JavaClassMethod(method.name, owner) {
 
     val annotationsLocal by lazy(LazyThreadSafetyMode.NONE) {
         method.declaredAnnotations.map { InstantAnnotation(it) }
@@ -17,11 +17,11 @@ class InstantClassMethod(owner: Class<*>, private val method: Method) : JavaClas
 
     val parameterLocal by lazy(LazyThreadSafetyMode.NONE) {
         val parameterAnnotations = method.parameterAnnotations
-        method.parameterTypes.mapIndexed { idx, it -> InstantAnnotatedClass(it, parameterAnnotations[idx].map { i -> InstantAnnotation(i) }) }
+        method.parameterTypes.mapIndexed { idx, it -> LazyAnnotatedClass.of(it, parameterAnnotations[idx].map { i -> InstantAnnotation(i) }) }
     }
 
     override val result: LazyClass
-        get() = InstantClass(method.returnType)
+        get() = LazyClass.of(method.returnType)
 
     override val parameter: List<LazyAnnotatedClass>
         get() = parameterLocal

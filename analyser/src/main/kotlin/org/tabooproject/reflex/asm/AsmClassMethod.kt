@@ -4,8 +4,6 @@ import org.objectweb.asm.signature.SignatureReader
 import org.objectweb.asm.signature.SignatureVisitor
 import org.objectweb.asm.signature.SignatureWriter
 import org.tabooproject.reflex.*
-import org.tabooproject.reflex.reflection.InstantAnnotatedClass
-import org.tabooproject.reflex.reflection.InstantClass
 import java.lang.reflect.Modifier
 
 /**
@@ -15,10 +13,11 @@ import java.lang.reflect.Modifier
 @Internal
 class AsmClassMethod(
     name: String,
-    owner: Class<*>,
+    owner: LazyClass,
     val descriptor: String,
     val access: Int,
     val parameterAnnotations: Map<Int, ArrayList<AsmAnnotation>>,
+    val classFinder: ClassAnalyser.ClassFinder,
     override val annotations: List<ClassAnnotation>,
 ) : JavaClassMethod(name, owner) {
 
@@ -77,20 +76,20 @@ class AsmClassMethod(
 
             override fun visitClassType(name: String) {
                 if (visitParameterType) {
-                    localParameter.add(LazyAnnotatedClass(name, parameterAnnotations[localParameter.size] ?: emptyList()))
+                    localParameter.add(LazyAnnotatedClass.of(name, parameterAnnotations[localParameter.size] ?: emptyList(), classFinder))
                 }
                 if (visitReturnType) {
-                    localResult = LazyClass(name)
+                    localResult = LazyClass.of(name, classFinder)
                 }
                 super.visitClassType(name)
             }
 
             override fun visitBaseType(descriptor: Char) {
                 if (visitParameterType) {
-                    localParameter += InstantAnnotatedClass(Reflection.getPrimitiveType(descriptor), parameterAnnotations[localParameter.size] ?: emptyList())
+                    localParameter += LazyAnnotatedClass.of(Reflection.getPrimitiveType(descriptor), parameterAnnotations[localParameter.size] ?: emptyList())
                 }
                 if (visitReturnType) {
-                    localResult = InstantClass(Reflection.getPrimitiveType(descriptor))
+                    localResult = LazyClass.of(Reflection.getPrimitiveType(descriptor))
                 }
                 super.visitBaseType(descriptor)
             }

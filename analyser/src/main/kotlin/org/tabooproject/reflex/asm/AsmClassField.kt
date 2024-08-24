@@ -1,9 +1,6 @@
 package org.tabooproject.reflex.asm
 
-import org.objectweb.asm.signature.SignatureReader
-import org.objectweb.asm.signature.SignatureWriter
 import org.tabooproject.reflex.*
-import org.tabooproject.reflex.reflection.InstantClass
 import java.lang.reflect.Modifier
 
 /**
@@ -11,13 +8,16 @@ import java.lang.reflect.Modifier
  * @since 2022/1/21 6:33 PM
  */
 @Internal
-class AsmClassField(name: String, owner: Class<*>, val descriptor: String, val access: Int, override val annotations: List<ClassAnnotation>) :
-    JavaClassField(name, owner) {
+class AsmClassField(
+    name: String,
+    owner: LazyClass,
+    val descriptor: String,
+    val access: Int,
+    val classFinder: ClassAnalyser.ClassFinder,
+    override val annotations: List<ClassAnnotation>
+) : JavaClassField(name, owner) {
 
-    lateinit var localType: LazyClass
-
-    override val type: LazyClass
-        get() = localType
+    override val type = AsmSignature.signatureToClass(descriptor, classFinder).first()
 
     override val isStatic: Boolean
         get() = Modifier.isStatic(access)
@@ -36,21 +36,6 @@ class AsmClassField(name: String, owner: Class<*>, val descriptor: String, val a
 
     override val isPrivate: Boolean
         get() = Modifier.isPrivate(access)
-
-    init {
-        SignatureReader(descriptor).accept(object : SignatureWriter() {
-
-            override fun visitClassType(name: String) {
-                localType = LazyClass(name)
-                super.visitClassType(name)
-            }
-
-            override fun visitBaseType(descriptor: Char) {
-                localType = InstantClass(Reflection.getPrimitiveType(descriptor))
-                super.visitBaseType(descriptor)
-            }
-        })
-    }
 
     override fun toString(): String {
         return "AsmClassField(descriptor='$descriptor', access=$access) ${super.toString()}"

@@ -1,11 +1,6 @@
 package org.tabooproject.reflex.asm
 
-import org.tabooproject.reflex.ClassAnnotation
-import org.tabooproject.reflex.Internal
-import org.tabooproject.reflex.JavaClassConstructor
-import org.tabooproject.reflex.LazyAnnotatedClass
-import org.tabooproject.reflex.reflection.InstantAnnotatedClass
-import org.tabooproject.reflex.reflection.InstantClass
+import org.tabooproject.reflex.*
 import java.lang.reflect.Modifier
 
 /**
@@ -15,18 +10,19 @@ import java.lang.reflect.Modifier
 @Internal
 class AsmClassConstructor(
     name: String,
-    owner: Class<*>,
+    owner: LazyClass,
     val descriptor: String,
     val access: Int,
     val parameterAnnotations: Map<Int, ArrayList<AsmAnnotation>>,
+    val classFinder: ClassAnalyser.ClassFinder,
     override val annotations: List<ClassAnnotation>,
 ) : JavaClassConstructor(name, owner) {
 
-    val localParameter = AsmSignature.signatureToClass(descriptor).mapIndexed { idx, it ->
-        if (it is InstantClass) {
-            InstantAnnotatedClass(it.instance, parameterAnnotations[idx] ?: emptyList())
+    val localParameter = AsmSignature.signatureToClass(descriptor, classFinder).mapIndexed { idx, it ->
+        if (it.isInstant) {
+            LazyAnnotatedClass.of(it.instance!!, parameterAnnotations[idx] ?: emptyList())
         } else {
-            LazyAnnotatedClass(it.name, parameterAnnotations[idx] ?: emptyList())
+            LazyAnnotatedClass.of(it.name, parameterAnnotations[idx] ?: emptyList(), classFinder)
         }
     }
 

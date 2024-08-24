@@ -9,34 +9,38 @@ package org.tabooproject.reflex
  */
 @Internal
 class JavaClassStructure(
-    owner: Class<*>,
+    type: Type,
+    owner: LazyClass,
+    access: Int,
+    superclass: LazyClass?,
+    interfaces: List<LazyClass>,
     annotations: List<ClassAnnotation>,
     fields: List<ClassField>,
     methods: List<ClassMethod>,
     constructors: List<ClassConstructor>,
-) : ClassStructure(owner, annotations, fields, methods, constructors) {
+) : ClassStructure(type, owner, access, superclass, interfaces, annotations, fields, methods, constructors) {
 
     override fun getField(name: String): ClassField {
-        return fields.firstOrNull { it.name == name } ?: throw NoSuchFieldException("${this.name}#$name")
+        return fields.find { it.name == name } ?: throw NoSuchFieldException("${this.name}#$name")
     }
 
     override fun getMethod(name: String, vararg parameter: Any?): ClassMethod {
-        return methods.firstOrNull { it.name == name && Reflection.isAssignableFrom(it.parameterTypes, parameter.map { p -> p?.javaClass }.toTypedArray()) }
+        return methods.find { it.name == name && Reflection.isAssignableFrom(it.parameterTypes, parameter.map { p -> p?.javaClass }.toTypedArray()) }
             ?: throw NoSuchMethodException("${this.name}#$name(${parameter.joinToString(";") { it?.javaClass?.name ?: "null" }})")
     }
 
     override fun getMethodByType(name: String, vararg parameter: Class<*>): ClassMethod {
-        return methods.firstOrNull { it.name == name && Reflection.isAssignableFrom(it.parameterTypes, parameter.toList().toTypedArray()) }
+        return methods.find { it.name == name && Reflection.isAssignableFrom(it.parameterTypes, parameter.toList().toTypedArray()) }
             ?: throw NoSuchMethodException("${this.name}#$name(${parameter.joinToString(";") { it.name }})")
     }
 
     override fun getConstructor(vararg parameter: Any?): ClassConstructor {
-        return constructors.firstOrNull { Reflection.isAssignableFrom(it.parameterTypes, parameter.map { p -> p?.javaClass }.toTypedArray()) }
+        return constructors.find { Reflection.isAssignableFrom(it.parameterTypes, parameter.map { p -> p?.javaClass }.toTypedArray()) }
             ?: throw NoSuchMethodException("${this.name}#<init>(${parameter.joinToString(";") { it?.javaClass?.name ?: "null" }})")
     }
 
     override fun getConstructorByType(vararg parameter: Class<*>): ClassConstructor {
-        return constructors.firstOrNull { Reflection.isAssignableFrom(it.parameterTypes, parameter.toList().toTypedArray()) }
+        return constructors.find { Reflection.isAssignableFrom(it.parameterTypes, parameter.toList().toTypedArray()) }
             ?: throw NoSuchMethodException("${this.name}#<init>(${parameter.joinToString(";") { it.name }})")
     }
 

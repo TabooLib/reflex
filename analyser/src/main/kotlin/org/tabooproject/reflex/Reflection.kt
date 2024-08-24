@@ -1,10 +1,15 @@
 package org.tabooproject.reflex
 
+import org.apache.commons.lang3.JavaVersion
+import org.apache.commons.lang3.SystemUtils
+
 /**
  * @author 坏黑
  * @since 2022/1/21 11:19 PM
  */
 object Reflection {
+
+    val autoboxing = runCatching { SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_1_5) }.getOrElse { true }
 
     fun isAssignableFrom(left: Array<Class<*>>, right: Array<Class<*>?>): Boolean {
         if (left.size != right.size) {

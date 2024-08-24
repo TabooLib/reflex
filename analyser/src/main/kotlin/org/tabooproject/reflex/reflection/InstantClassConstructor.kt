@@ -1,9 +1,6 @@
 package org.tabooproject.reflex.reflection
 
-import org.tabooproject.reflex.ClassAnnotation
-import org.tabooproject.reflex.Internal
-import org.tabooproject.reflex.JavaClassConstructor
-import org.tabooproject.reflex.LazyAnnotatedClass
+import org.tabooproject.reflex.*
 import java.lang.reflect.Constructor
 import java.lang.reflect.Modifier
 
@@ -12,7 +9,7 @@ import java.lang.reflect.Modifier
  * @since 2022/1/21 7:11 PM
  */
 @Internal
-class InstantClassConstructor(owner: Class<*>, private val constructor: Constructor<*>) : JavaClassConstructor("<init>", owner) {
+class InstantClassConstructor(owner: LazyClass, private val constructor: Constructor<*>) : JavaClassConstructor("<init>", owner) {
 
     val annotationsLocal by lazy(LazyThreadSafetyMode.NONE) {
         constructor.declaredAnnotations.map { InstantAnnotation(it) }
@@ -20,7 +17,7 @@ class InstantClassConstructor(owner: Class<*>, private val constructor: Construc
 
     val parameterLocal by lazy(LazyThreadSafetyMode.NONE) {
         val parameterAnnotations = constructor.parameterAnnotations
-        constructor.parameterTypes.mapIndexed { idx, it -> InstantAnnotatedClass(it, parameterAnnotations[idx].map { i -> InstantAnnotation(i) }) }
+        constructor.parameterTypes.mapIndexed { idx, it -> LazyAnnotatedClass.of(it, parameterAnnotations[idx].map { i -> InstantAnnotation(i) }) }
     }
 
     override val isStatic: Boolean

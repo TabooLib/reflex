@@ -1,34 +1,56 @@
 package org.tabooproject.reflex
 
-import java.util.LinkedList
+import java.lang.reflect.Modifier
+import java.util.*
 
 /**
  * @author 坏黑
  * @since 2022/1/21 6:41 PM
  */
 abstract class ClassStructure(
-    val owner: Class<*>,
+    val type: Type,
+    val owner: LazyClass,
+    val access: Int,
+    val superclass: LazyClass?,
+    interfaces: List<LazyClass>,
     annotations: List<ClassAnnotation>,
     fields: List<ClassField>,
     methods: List<ClassMethod>,
     constructors: List<ClassConstructor>,
 ) {
 
+    val name by lazy(LazyThreadSafetyMode.NONE) { runCatching { owner.name }.getOrNull() }
+    val simpleName by lazy(LazyThreadSafetyMode.NONE) { runCatching { owner.simpleName }.getOrNull() }
+
+    val interfaces = LinkedList(interfaces)
     val annotations = LinkedList(annotations)
-
     val fields = LinkedList(fields)
-
     val methods = LinkedList(methods)
-
     val constructors = LinkedList(constructors)
 
-    val name by lazy(LazyThreadSafetyMode.NONE) {
-        runCatching { owner.name }.getOrNull()
-    }
+    val isStatic: Boolean
+        get() = Modifier.isStatic(access)
 
-    val simpleName by lazy(LazyThreadSafetyMode.NONE) {
-        runCatching { owner.simpleName }.getOrNull()
-    }
+    val isFinal: Boolean
+        get() = Modifier.isFinal(access)
+
+    val isPublic: Boolean
+        get() = Modifier.isPublic(access)
+
+    val isProtected: Boolean
+        get() = Modifier.isProtected(access)
+
+    val isPrivate: Boolean
+        get() = Modifier.isPrivate(access)
+
+    val isAbstract: Boolean
+        get() = Modifier.isAbstract(access)
+
+    val isInterface: Boolean
+        get() = Modifier.isInterface(access)
+
+    val isStrict: Boolean
+        get() = Modifier.isStrict(access)
 
     abstract fun getField(name: String): ClassField
 
@@ -55,6 +77,6 @@ abstract class ClassStructure(
     abstract fun isAnnotationPresent(annotation: Class<out Annotation>): Boolean
 
     override fun toString(): String {
-        return "ClassStructure(owner=$owner, fields=$fields, methods=$methods, constructors=$constructors)"
+        return "ClassStructure(owner=$owner, superclass=$superclass, interfaces=$interfaces, annotations=$annotations, fields=$fields, methods=$methods, constructors=$constructors)"
     }
 }

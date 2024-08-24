@@ -12,12 +12,12 @@ import java.lang.reflect.Modifier
  * @since 2022/1/21 7:11 PM
  */
 @Internal
-class InstantClassField(owner: Class<*>, private val field: Field) : JavaClassField(field.name, owner) {
+class InstantClassField(owner: LazyClass, private val field: Field) : JavaClassField(field.name, owner) {
 
     val annotationsLocal = field.declaredAnnotations.map { InstantAnnotation(it) }
 
     override val type: LazyClass
-        get() = InstantClass(this.field.type)
+        get() = LazyClass.of(this.field.type)
 
     override val isTransient: Boolean
         get() = Modifier.isTransient(this.field.modifiers)

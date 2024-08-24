@@ -67,7 +67,7 @@ class ReflexClassTest {
     @Test
     fun testGetInvalidMethod() {
         try {
-            targetReflexClass.getMethod("toString")
+            targetReflexClass.getMethod("NotDefined")
             throw IllegalStateException()
         } catch (_: NoSuchMethodException) {
         }

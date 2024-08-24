@@ -7,6 +7,8 @@ import org.tabooproject.reflex.reflection.InstantAnnotation
 import org.tabooproject.reflex.reflection.InstantClassConstructor
 import org.tabooproject.reflex.reflection.InstantClassField
 import org.tabooproject.reflex.reflection.InstantClassMethod
+import org.tabooproject.reflex.util.ClassHelper.ClassFinder
+import java.io.InputStream
 
 /**
  * @author 坏黑
@@ -49,23 +51,53 @@ object ClassAnalyser {
     }
 
     fun analyseByReflection(clazz: Class<*>): JavaClassStructure {
+        val lc = LazyClass.of(clazz)
+        val superclass = clazz.superclass?.let { LazyClass.of(it) }
+        val interfaces = clazz.interfaces.map { LazyClass.of(it) }
         val annotations = clazz.declaredAnnotations.map { InstantAnnotation(it) }
-        val fields = clazz.declaredFields.map { InstantClassField(clazz, it) }
-        val methods = clazz.declaredMethods.map { InstantClassMethod(clazz, it) }
-        val constructors = clazz.declaredConstructors.map { InstantClassConstructor(clazz, it) }
-        return JavaClassStructure(clazz, annotations, fields, methods, constructors)
+        val fields = clazz.declaredFields.map { InstantClassField(lc, it) }
+        val methods = clazz.declaredMethods.map { InstantClassMethod(lc, it) }
+        val constructors = clazz.declaredConstructors.map { InstantClassConstructor(lc, it) }
+        return JavaClassStructure(Type.REFLECTION, lc, clazz.modifiers, superclass, interfaces, annotations, fields, methods, constructors)
+    }
+
+    fun analyseByASM(clazz: Class<*>): JavaClassStructure {
+        return analyseByASM(clazz) { Class.forName(it) }
     }
 
     @Suppress("FoldInitializerAndIfToElvis")
-    fun analyseByASM(clazz: Class<*>): JavaClassStructure {
+    fun analyseByASM(clazz: Class<*>, classFinder: ClassFinder): JavaClassStructure {
         val resourceAsStream = clazz.getResourceAsStream("/${clazz.name.replace('.', '/')}.class")
         if (resourceAsStream == null) {
             // 无法从资源文件中找到对应的类文件，可能来自远程加载
             throw ClassNotFoundException("Class ${clazz.name} not found (file not in the jar)")
         }
-        val classReader = ClassReader(resourceAsStream)
-        val analyser = AsmClassVisitor(clazz, ClassWriter(ClassWriter.COMPUTE_MAXS))
+        return analyseByASM(LazyClass.of(clazz), resourceAsStream, classFinder)
+    }
+
+    fun analyseByASM(clazz: LazyClass, inputStream: InputStream): JavaClassStructure {
+        return analyseByASM(clazz, inputStream) { Class.forName(it) }
+    }
+
+    fun analyseByASM(clazz: LazyClass, inputStream: InputStream, classFinder: ClassFinder): JavaClassStructure {
+        val classReader = ClassReader(inputStream)
+        val analyser = AsmClassVisitor(clazz, classFinder, ClassWriter(ClassWriter.COMPUTE_MAXS))
         classReader.accept(analyser, ClassReader.SKIP_DEBUG)
-        return JavaClassStructure(clazz, analyser.annotations, analyser.fields, analyser.methods, analyser.constructors)
+        return JavaClassStructure(
+            Type.ASM,
+            clazz,
+            analyser.access,
+            analyser.superclass,
+            analyser.interfaces,
+            analyser.annotations,
+            analyser.fields,
+            analyser.methods,
+            analyser.constructors
+        )
+    }
+
+    fun interface ClassFinder {
+
+        fun findClass(name: String): Class<*>
     }
 }

@@ -4,7 +4,7 @@ package org.tabooproject.reflex
  * @author 坏黑
  * @since 2022/1/21 6:41 PM
  */
-abstract class ClassField(name: String, owner: Class<*>) : ClassMember(name, owner) {
+abstract class ClassField(name: String, owner: LazyClass) : ClassMember(name, owner) {
 
     abstract val type: LazyClass
 

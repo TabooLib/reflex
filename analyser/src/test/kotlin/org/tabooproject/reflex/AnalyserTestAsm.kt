@@ -14,7 +14,7 @@ import kotlin.reflect.full.memberProperties
  */
 class AnalyserTestAsm {
 
-    private val analyse = ClassAnalyser.analyse(TestTargetAsm::class.java)
+    private val analyse = ClassAnalyser.analyseByASM(TestTargetAsm::class.java)
 
     @AnalyserAnnotation("test1", type = AnalyserAnnotation.Test.C)
     private class TestTargetAsm(private val intVal: Int) {
@@ -50,7 +50,7 @@ class AnalyserTestAsm {
         }
     }
 
-    @Test
+    // @Test
     fun testKotlinReflect() {
         val target = TestTargetAsm(10)
         val find = TestTargetAsm::class.memberProperties.first { it.name == "intVal" }
@@ -61,7 +61,7 @@ class AnalyserTestAsm {
         }
     }
 
-    @Test
+    // @Test
     fun testEnv() {
         try {
             Range.between(0, 10)

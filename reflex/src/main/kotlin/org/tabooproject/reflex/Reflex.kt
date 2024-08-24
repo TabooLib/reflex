@@ -6,6 +6,7 @@ class Reflex {
     /**
      * 为了兼容性，保持原有的形势
      */
+    @Suppress("FunctionName")
     companion object {
 
         /**
@@ -25,7 +26,22 @@ class Reflex {
          * 通过构造方法实例化对象
          */
         fun <T> Class<T>.invokeConstructor(vararg parameter: Any?): T {
-            return ReflexClass.of(this).getConstructor(*parameter).instance(*parameter) as T
+            return ReflexClass.of(this).newInstance(*parameter) as T
+        }
+
+        /**
+         * 通过构造方法实例化对象
+         */
+        fun <T> Class<T>.invokeConstructor(mode: AnalyseMode, vararg parameter: Any?): T {
+            return ReflexClass.of(this, mode).newInstance(*parameter) as T
+        }
+
+        /**
+         * 执行方法
+         * 为 Java 调用提供便利，不查父类，不重映射
+         */
+        fun <T> Any.invokeLocalMethod(name: String, vararg parameter: Any?): T? {
+            return invokeMethod<T>(name, *parameter, false, false, false, AnalyseMode.REFLECTION_FIRST)
         }
 
         /**
@@ -34,13 +50,30 @@ class Reflex {
          * @param parameter 方法参数
          * @param isStatic 是否为静态方法
          * @param findToParent 是否查找父类方法
+         * @param remap 是否应用重映射
+         * @param mode 分析模式
          */
-        fun <T> Any.invokeMethod(name: String, vararg parameter: Any?, isStatic: Boolean = false, findToParent: Boolean = true, remap: Boolean = true): T? {
+        fun <T> Any.invokeMethod(
+            name: String,
+            vararg parameter: Any?,
+            isStatic: Boolean = false,
+            findToParent: Boolean = true,
+            remap: Boolean = true,
+            mode: AnalyseMode = AnalyseMode.REFLECTION_FIRST
+        ): T? {
             return if (isStatic && this is Class<*>) {
-                ReflexClass.of(this).getMethod(name, findToParent, remap, *parameter).invokeStatic(*parameter) as T?
+                ReflexClass.of(this, mode).getMethod(name, findToParent, remap, *parameter).invokeStatic(*parameter) as T?
             } else {
-                ReflexClass.of(javaClass).getMethod(name, findToParent, remap, *parameter).invoke(this, *parameter) as T?
+                ReflexClass.of(javaClass, mode).getMethod(name, findToParent, remap, *parameter).invoke(this, *parameter) as T?
             }
+        }
+
+        /**
+         * 获取字段
+         * 为 Java 调用提供便利，不查父类，不重映射
+         */
+        fun <T> Any.getLocalProperty(name: String): T? {
+            return getProperty(name, false, findToParent = false, remap = false, mode = AnalyseMode.REFLECTION_FIRST)
         }
 
         /**
@@ -48,15 +81,31 @@ class Reflex {
          * @param path 字段名称，使用 "/" 符号进行递归获取
          * @param isStatic 是否为静态字段
          * @param findToParent 是否查找父类字段
+         * @param remap 是否应用重映射
+         * @param mode 分析模式
          */
-        fun <T> Any.getProperty(path: String, isStatic: Boolean = false, findToParent: Boolean = true, remap: Boolean = true): T? {
+        fun <T> Any.getProperty(
+            path: String,
+            isStatic: Boolean = false,
+            findToParent: Boolean = true,
+            remap: Boolean = true,
+            mode: AnalyseMode = AnalyseMode.REFLECTION_FIRST
+        ): T? {
             return if (path.contains('/')) {
                 val left = path.substringBefore('/')
                 val right = path.substringAfter('/')
-                getLocalProperty<Any>(left, isStatic, findToParent, remap)?.getProperty(right, isStatic, findToParent, remap)
+                _get<Any>(left, isStatic, findToParent, remap, mode)?.getProperty(right, isStatic, findToParent, remap, mode)
             } else {
-                getLocalProperty(path, isStatic, findToParent, remap)
+                _get(path, isStatic, findToParent, remap, mode)
             }
+        }
+
+        /**
+         * 修改字段
+         * 为 Java 调用提供便利，不查父类，不重映射
+         */
+        fun Any.setLocalProperty(name: String, value: Any?) {
+            setProperty(name, value, false, findToParent = false, remap = false, mode = AnalyseMode.REFLECTION_FIRST)
         }
 
         /**
@@ -65,30 +114,52 @@ class Reflex {
          * @param value 值
          * @param isStatic 是否为静态字段
          * @param findToParent 是否查找到父类字段
+         * @param remap 是否应用重映射
+         * @param mode 分析模式
          */
-        fun Any.setProperty(path: String, value: Any?, isStatic: Boolean = false, findToParent: Boolean = true, remap: Boolean = true) {
+        fun Any.setProperty(
+            path: String,
+            value: Any?,
+            isStatic: Boolean = false,
+            findToParent: Boolean = true,
+            remap: Boolean = true,
+            mode: AnalyseMode = AnalyseMode.REFLECTION_FIRST
+        ) {
             if (path.contains('/')) {
                 val left = path.substringBefore('/')
                 val right = path.substringAfter('/')
-                getLocalProperty<Any>(left, isStatic, findToParent, remap)?.setProperty(right, value, isStatic, findToParent, remap)
+                _get<Any>(left, isStatic, findToParent, remap, mode)?.setProperty(right, value, isStatic, findToParent, remap, mode)
             } else {
-                setLocalProperty(path, value, isStatic, findToParent, remap)
+                _set(path, value, isStatic, findToParent, remap, mode)
             }
         }
 
-        private fun <T> Any.getLocalProperty(name: String, isStatic: Boolean = false, findToParent: Boolean = true, remap: Boolean = true): T? {
+        private fun <T> Any._get(
+            name: String,
+            isStatic: Boolean = false,
+            findToParent: Boolean = true,
+            remap: Boolean = true,
+            mode: AnalyseMode = AnalyseMode.REFLECTION_FIRST
+        ): T? {
             return if (isStatic && this is Class<*>) {
-                ReflexClass.of(this).getField(name, findToParent, remap).get() as T?
+                ReflexClass.of(this, mode).getField(name, findToParent, remap).get() as T?
             } else {
-                ReflexClass.of(javaClass).getField(name, findToParent, remap).get(this) as T?
+                ReflexClass.of(javaClass, mode).getField(name, findToParent, remap).get(this) as T?
             }
         }
 
-        private fun Any.setLocalProperty(name: String, value: Any?, isStatic: Boolean = false, findToParent: Boolean = true, remap: Boolean = true) {
+        private fun Any._set(
+            name: String,
+            value: Any?,
+            isStatic: Boolean = false,
+            findToParent: Boolean = true,
+            remap: Boolean = true,
+            mode: AnalyseMode = AnalyseMode.REFLECTION_FIRST
+        ) {
             if (isStatic && this is Class<*>) {
-                ReflexClass.of(this).getField(name, findToParent, remap).setStatic(value)
+                ReflexClass.of(this, mode).getField(name, findToParent, remap).setStatic(value)
             } else {
-                ReflexClass.of(javaClass).getField(name, findToParent, remap).set(this, value)
+                ReflexClass.of(javaClass, mode).getField(name, findToParent, remap).set(this, value)
             }
         }
     }

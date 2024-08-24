@@ -2,6 +2,7 @@ package org.tabooproject.reflex
 
 import org.junit.jupiter.api.Test
 import org.tabooproject.reflex.Reflex.Companion.getProperty
+import org.tabooproject.reflex.Reflex.Companion.invokeConstructor
 import org.tabooproject.reflex.Reflex.Companion.invokeMethod
 import java.lang.IllegalStateException
 
@@ -57,5 +58,15 @@ class ReflexTest {
     fun testGetParentMethod() {
         val target = Target(10, "test")
         assert(target.invokeMethod<Int>("walk", 10) == 10)
+    }
+
+    @Test
+    fun testConstructorASM() {
+        assert(ReflexClass.of(TargetParentParent::class.java, AnalyseMode.ASM_ONLY).newInstance() != null)
+    }
+
+    @Test
+    fun testConstructorReflection() {
+        assert(ReflexClass.of(TargetParentParent::class.java, AnalyseMode.REFLECTION_ONLY).newInstance() != null)
     }
 }
