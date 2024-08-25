@@ -7,7 +7,6 @@ import org.tabooproject.reflex.reflection.InstantAnnotation
 import org.tabooproject.reflex.reflection.InstantClassConstructor
 import org.tabooproject.reflex.reflection.InstantClassField
 import org.tabooproject.reflex.reflection.InstantClassMethod
-import org.tabooproject.reflex.util.ClassHelper.ClassFinder
 import java.io.InputStream
 
 /**
@@ -16,7 +15,7 @@ import java.io.InputStream
 object ClassAnalyser {
 
     fun analyse(clazz: Class<*>): ClassStructure {
-        return analyse(clazz, AnalyseMode.REFLECTION_FIRST)
+        return analyse(clazz, AnalyseMode.default)
     }
 
     fun analyse(clazz: Class<*>, mode: AnalyseMode): ClassStructure {
@@ -84,15 +83,7 @@ object ClassAnalyser {
         val analyser = AsmClassVisitor(clazz, classFinder, ClassWriter(ClassWriter.COMPUTE_MAXS))
         classReader.accept(analyser, ClassReader.SKIP_DEBUG)
         return JavaClassStructure(
-            Type.ASM,
-            clazz,
-            analyser.access,
-            analyser.superclass,
-            analyser.interfaces,
-            analyser.annotations,
-            analyser.fields,
-            analyser.methods,
-            analyser.constructors
+            Type.ASM, clazz, analyser.access, analyser.superclass, analyser.interfaces, analyser.annotations, analyser.fields, analyser.methods, analyser.constructors
         )
     }
 

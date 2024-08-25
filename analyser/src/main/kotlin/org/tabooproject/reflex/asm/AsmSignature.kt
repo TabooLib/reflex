@@ -25,7 +25,9 @@ object AsmSignature {
             }
         })
         if (list.lastOrNull()?.name == "void") {
-            list.removeLast()
+            // Caused by: java.lang.NoSuchMethodError: 'java.lang.Object java.util.ArrayList.removeLast()'
+            // 你在逗我玩吗兄弟？
+            list.removeAt(list.size - 1)
         }
         return list
     }

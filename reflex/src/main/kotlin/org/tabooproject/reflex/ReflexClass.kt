@@ -222,7 +222,7 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) {
         }
 
         fun of(clazz: Class<*>, saving: Boolean): ReflexClass {
-            return of(clazz, AnalyseMode.REFLECTION_FIRST, saving)
+            return of(clazz, AnalyseMode.default, saving)
         }
 
         fun of(clazz: Class<*>, mode: AnalyseMode, saving: Boolean): ReflexClass {

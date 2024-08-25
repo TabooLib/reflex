@@ -41,7 +41,7 @@ class Reflex {
          * 为 Java 调用提供便利，不查父类，不重映射
          */
         fun <T> Any.invokeLocalMethod(name: String, vararg parameter: Any?): T? {
-            return invokeMethod<T>(name, *parameter, false, false, false, AnalyseMode.REFLECTION_FIRST)
+            return invokeMethod<T>(name, *parameter, false, false, false, AnalyseMode.default)
         }
 
         /**
@@ -59,7 +59,7 @@ class Reflex {
             isStatic: Boolean = false,
             findToParent: Boolean = true,
             remap: Boolean = true,
-            mode: AnalyseMode = AnalyseMode.REFLECTION_FIRST
+            mode: AnalyseMode = AnalyseMode.default
         ): T? {
             return if (isStatic && this is Class<*>) {
                 ReflexClass.of(this, mode).getMethod(name, findToParent, remap, *parameter).invokeStatic(*parameter) as T?
@@ -73,7 +73,7 @@ class Reflex {
          * 为 Java 调用提供便利，不查父类，不重映射
          */
         fun <T> Any.getLocalProperty(name: String): T? {
-            return getProperty(name, false, findToParent = false, remap = false, mode = AnalyseMode.REFLECTION_FIRST)
+            return getProperty(name, false, findToParent = false, remap = false, mode = AnalyseMode.default)
         }
 
         /**
@@ -89,7 +89,7 @@ class Reflex {
             isStatic: Boolean = false,
             findToParent: Boolean = true,
             remap: Boolean = true,
-            mode: AnalyseMode = AnalyseMode.REFLECTION_FIRST
+            mode: AnalyseMode = AnalyseMode.default
         ): T? {
             return if (path.contains('/')) {
                 val left = path.substringBefore('/')
@@ -105,7 +105,7 @@ class Reflex {
          * 为 Java 调用提供便利，不查父类，不重映射
          */
         fun Any.setLocalProperty(name: String, value: Any?) {
-            setProperty(name, value, false, findToParent = false, remap = false, mode = AnalyseMode.REFLECTION_FIRST)
+            setProperty(name, value, false, findToParent = false, remap = false, mode = AnalyseMode.default)
         }
 
         /**
@@ -123,7 +123,7 @@ class Reflex {
             isStatic: Boolean = false,
             findToParent: Boolean = true,
             remap: Boolean = true,
-            mode: AnalyseMode = AnalyseMode.REFLECTION_FIRST
+            mode: AnalyseMode = AnalyseMode.default
         ) {
             if (path.contains('/')) {
                 val left = path.substringBefore('/')
@@ -139,7 +139,7 @@ class Reflex {
             isStatic: Boolean = false,
             findToParent: Boolean = true,
             remap: Boolean = true,
-            mode: AnalyseMode = AnalyseMode.REFLECTION_FIRST
+            mode: AnalyseMode = AnalyseMode.default
         ): T? {
             return if (isStatic && this is Class<*>) {
                 ReflexClass.of(this, mode).getField(name, findToParent, remap).get() as T?
@@ -154,7 +154,7 @@ class Reflex {
             isStatic: Boolean = false,
             findToParent: Boolean = true,
             remap: Boolean = true,
-            mode: AnalyseMode = AnalyseMode.REFLECTION_FIRST
+            mode: AnalyseMode = AnalyseMode.default
         ) {
             if (isStatic && this is Class<*>) {
                 ReflexClass.of(this, mode).getField(name, findToParent, remap).setStatic(value)
