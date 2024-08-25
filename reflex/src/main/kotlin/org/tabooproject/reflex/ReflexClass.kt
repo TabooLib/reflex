@@ -43,7 +43,7 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) {
      * ```
      */
     fun isCompanion(): Boolean {
-        return simpleName == "Companion"
+        return simpleName?.endsWith("\$Companion") == true
     }
 
     /**

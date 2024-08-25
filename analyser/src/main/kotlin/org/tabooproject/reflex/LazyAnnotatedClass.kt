@@ -37,7 +37,7 @@ open class LazyAnnotatedClass protected constructor(
         }
 
         fun of(source: String, annotations: List<ClassAnnotation>, classFinder: ClassAnalyser.ClassFinder): LazyAnnotatedClass {
-            return LazyAnnotatedClass(source, false, { classFinder.findClass(source) }, annotations)
+            return LazyAnnotatedClass(source, false, { classFinder.findClass(source.replace('/', '.')) }, annotations)
         }
 
         fun of(source: String, getter: Supplier<Class<*>?>, annotations: List<ClassAnnotation>): LazyAnnotatedClass {

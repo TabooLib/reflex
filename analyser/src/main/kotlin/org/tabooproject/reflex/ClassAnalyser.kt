@@ -75,7 +75,13 @@ object ClassAnalyser {
     }
 
     fun analyseByASM(clazz: LazyClass, inputStream: InputStream): JavaClassStructure {
-        return analyseByASM(clazz, inputStream) { Class.forName(it) }
+        return analyseByASM(clazz, inputStream) {
+            try {
+                Class.forName(it)
+            } catch (ex: ClassNotFoundException) {
+                throw ClassNotFoundException("Class \"$it\" not found, classloader ${javaClass.classLoader}")
+            }
+        }
     }
 
     fun analyseByASM(clazz: LazyClass, inputStream: InputStream, classFinder: ClassFinder): JavaClassStructure {
