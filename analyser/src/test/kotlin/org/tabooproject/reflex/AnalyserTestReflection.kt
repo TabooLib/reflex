@@ -11,7 +11,7 @@ import org.tabooproject.reflex.reflection.InstantClassConstructor
  */
 class AnalyserTestReflection {
 
-    private val analyse = ClassAnalyser.analyse(TestTargetReflection::class.java)
+    private val analyse = ClassAnalyser.analyse(TestTargetReflection::class.java, AnalyseMode.REFLECTION_ONLY)
 
     @AnalyserAnnotation("test1", type = AnalyserAnnotation.Test.C)
     private class TestTargetReflection(val intVal: Int) {
