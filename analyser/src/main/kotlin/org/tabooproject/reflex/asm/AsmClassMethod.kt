@@ -61,6 +61,7 @@ class AsmClassMethod(
     fun read() {
         var visitParameterType = false
         var visitReturnType = false
+        var visitArrayType = false
         SignatureReader(descriptor).accept(object : SignatureWriter() {
 
             override fun visitParameterType(): SignatureVisitor {
@@ -76,22 +77,29 @@ class AsmClassMethod(
 
             override fun visitClassType(name: String) {
                 if (visitParameterType) {
-                    localParameter.add(LazyAnnotatedClass.of(name, parameterAnnotations[localParameter.size] ?: emptyList(), classFinder))
+                    localParameter.add(LazyAnnotatedClass.of(name, parameterAnnotations[localParameter.size] ?: emptyList(), visitArrayType, classFinder))
                 }
                 if (visitReturnType) {
-                    localResult = LazyClass.of(name, classFinder)
+                    localResult = LazyClass.of(name, visitArrayType, classFinder)
                 }
+                visitArrayType = false
                 super.visitClassType(name)
             }
 
             override fun visitBaseType(descriptor: Char) {
                 if (visitParameterType) {
-                    localParameter += LazyAnnotatedClass.of(Reflection.getPrimitiveType(descriptor), parameterAnnotations[localParameter.size] ?: emptyList())
+                    localParameter += LazyAnnotatedClass.of(Reflection.getPrimitiveType(descriptor), parameterAnnotations[localParameter.size] ?: emptyList(), visitArrayType)
                 }
                 if (visitReturnType) {
-                    localResult = LazyClass.of(Reflection.getPrimitiveType(descriptor))
+                    localResult = LazyClass.of(Reflection.getPrimitiveType(descriptor), visitArrayType)
                 }
+                visitArrayType = false
                 super.visitBaseType(descriptor)
+            }
+
+            override fun visitArrayType(): SignatureVisitor {
+                visitArrayType = true
+                return super.visitArrayType()
             }
         })
     }

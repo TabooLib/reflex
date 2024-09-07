@@ -24,6 +24,8 @@ class AnalyserTestAsm {
 
         var stringVar = "test"
 
+        var stringArrayVar = arrayOf("test1", "test2")
+
         @AnalyserAnnotation("test3")
         constructor() : this(0)
 
@@ -33,6 +35,10 @@ class AnalyserTestAsm {
         @AnalyserAnnotation("test4")
         private fun method(@AnalyserAnnotation("test5") value: Int): Int {
             return value
+        }
+
+        private fun methodArray(arr1: Array<String>, value: String, arr2: IntArray): DoubleArray {
+            return doubleArrayOf(1.0, 2.0)
         }
 
         companion object {
@@ -118,6 +124,18 @@ class AnalyserTestAsm {
     }
 
     @Test
+    fun testGetArrayVar() {
+        assert(analyse.getField("stringArrayVar").fieldType == Array<String>::class.java)
+    }
+
+    @Test
+    fun testSetArrayVer() {
+        val target = TestTargetAsm()
+        analyse.getField("stringArrayVar").set(target, arrayOf("update1", "update2"))
+        assert(target.stringArrayVar.contentEquals(arrayOf("update1", "update2")))
+    }
+
+    @Test
     fun testGetStatic() {
         analyse.getField("intRangeVal").get()!!
     }
@@ -134,6 +152,12 @@ class AnalyserTestAsm {
         analyse.getMethod("method").invoke(target)
         assert(analyse.getMethod("method", 10).invoke(target, 10) == 10)
         assert(analyse.getMethodByType("method", Int::class.java).invoke(target, 10) == 10)
+    }
+
+    @Test
+    fun testInvokeArrayMethod() {
+        val target = TestTargetAsm()
+        analyse.getMethod("methodArray", arrayOf("test1", "test2"), "test", intArrayOf(1, 2)).invoke(target, arrayOf("test1", "test2"), "test", intArrayOf(1, 2))
     }
 
     @Test
