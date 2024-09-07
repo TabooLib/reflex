@@ -83,10 +83,10 @@ class AnalyserTestAsm {
 
     @Test
     fun testAnalyse() {
-        // intVal, range, bitField, stringVar, intRangeVal, Companion == 6
-        assert(analyse.fields.size == 6)
-        // getRange, setRange, getStringVar, setStringVar, method, method, methodStatic == 7
-        assert(analyse.methods.size == 7)
+        // intVal, range, bitField, stringVar, stringArrayVar, intRangeVal, Companion == 7
+        assert(analyse.fields.size == 7)
+        // getRange, setRange, getStringVar, setStringVar, getStringArrayVar, setStringArrayVar, method, method, methodArray, methodStatic == 10
+        assert(analyse.methods.size == 10)
         assert(analyse.constructors.size == 2)
     }
 
