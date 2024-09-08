@@ -1,5 +1,8 @@
 package org.tabooproject.reflex
 
+import org.objectweb.asm.Type
+import org.tabooproject.reflex.asm.AsmSignature
+
 /**
  * @author 坏黑
  * @since 2022/1/24 7:42 PM
@@ -91,6 +94,19 @@ abstract class ClassAnnotation(val source: LazyClass) {
 
     fun enumNameList(name: String): List<String> {
         return list<LazyEnum>(name).map { it.name }
+    }
+
+    fun type(name: String): LazyClass {
+        return type(name, { Class.forName(it.replace('/', '.')) })
+    }
+
+    fun type(name: String, classFinder: ClassAnalyser.ClassFinder): LazyClass {
+        val el = property<Any?>(name) ?: throw TypeNotFoundException(name)
+        return when (el) {
+            is Class<*> -> LazyClass.of(el)
+            is Type -> AsmSignature.signatureToClass(el.descriptor, classFinder)[0]
+            else -> throw TypeNotFoundException(name)
+        }
     }
 
     override fun toString(): String {
