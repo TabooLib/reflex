@@ -112,4 +112,15 @@ abstract class ClassAnnotation(val source: LazyClass) {
     override fun toString(): String {
         return "ClassAnnotation(source=$source, properties=${propertyKeys()})"
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is ClassAnnotation) return false
+        if (source != other.source) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        return source.hashCode()
+    }
 }

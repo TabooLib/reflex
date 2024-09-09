@@ -27,6 +27,20 @@ open class LazyAnnotatedClass protected constructor(
         return "LazyAnnotatedClass(${if (isArray) "Array[$name]" else name},@${annotations})"
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is LazyAnnotatedClass) return false
+        if (!super.equals(other)) return false
+        if (annotations != other.annotations) return false
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = super.hashCode()
+        result = 31 * result + annotations.hashCode()
+        return result
+    }
+
     companion object {
 
         fun of(clazz: Class<*>, annotations: List<ClassAnnotation>): LazyAnnotatedClass {

@@ -14,6 +14,7 @@ subprojects {
     apply(plugin = "org.tabooproject.shrinkingkt")
 
     repositories {
+        mavenLocal()
         mavenCentral()
     }
 
@@ -21,6 +22,10 @@ subprojects {
         "implementation"(kotlin("stdlib"))
         "testRuntimeOnly"("org.junit.jupiter:junit-jupiter-engine:5.8.1")
         "testImplementation"("org.junit.jupiter:junit-jupiter-api:5.8.1")
+    }
+
+    java {
+        withSourcesJar()
     }
 
     configure<JavaPluginExtension> {
