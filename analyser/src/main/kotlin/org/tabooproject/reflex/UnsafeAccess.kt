@@ -24,14 +24,14 @@ object UnsafeAccess {
             } catch (ignored: Throwable) {
                 // Fix JDK22 compatibility
                 // MethodHandles.lookup().ensureInitialized(MethodHandles.Lookup::class.java)
-                MethodHandles.Lookup::class.java.getDeclaredMethod("ensureInitialized").invoke(MethodHandles.Lookup::class.java)
+                MethodHandles.Lookup::class.java.getDeclaredMethod("ensureInitialized", Class::class.java).invoke(MethodHandles.lookup(), MethodHandles.Lookup::class.java)
             }
             val lookupField = MethodHandles.Lookup::class.java.getDeclaredField("IMPL_LOOKUP")
             val lookupBase = unsafe.staticFieldBase(lookupField)
             val lookupOffset = unsafe.staticFieldOffset(lookupField)
             lookup = unsafe.getObject(lookupBase, lookupOffset) as MethodHandles.Lookup
         } catch (t: Throwable) {
-            throw IllegalStateException("Unsafe not found")
+            throw IllegalStateException("Unsafe not found", t)
         }
     }
 
