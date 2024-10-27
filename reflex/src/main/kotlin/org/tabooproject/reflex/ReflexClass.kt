@@ -205,6 +205,20 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) {
         }
     }
 
+    /**
+     * 获取当前类的 [Class] 对象
+     */
+    fun toClass(): Class<out Any> {
+        return structure.owner.instance ?: error("Class not found: $name")
+    }
+
+    /**
+     * 获取当前类的 [Class] 对象，可为空
+     */
+    fun toClassOrNull(): Class<out Any>? {
+        return structure.owner.instance
+    }
+
     override fun toString(): String {
         return "ReflexClass $mode($name)"
     }
