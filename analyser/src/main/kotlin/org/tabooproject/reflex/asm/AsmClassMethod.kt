@@ -4,6 +4,7 @@ import org.objectweb.asm.signature.SignatureReader
 import org.objectweb.asm.signature.SignatureVisitor
 import org.objectweb.asm.signature.SignatureWriter
 import org.tabooproject.reflex.*
+import org.tabooproject.reflex.serializer.BinaryWriter
 import java.lang.reflect.Modifier
 
 /**
@@ -106,5 +107,22 @@ class AsmClassMethod(
 
     override fun toString(): String {
         return "AsmClassMethod(descriptor='$descriptor', access=$access) ${super.toString()}"
+    }
+
+    override fun writeTo(writer: BinaryWriter) {
+        writer.writeNullableString(name)
+        writer.writeObj(owner)
+        writer.writeNullableString(descriptor)
+        writer.writeInt(access)
+        // 参数注解
+        writer.writeInt(parameter.size)
+        parameterAnnotations.forEach { (k, v) ->
+            writer.writeInt(k)
+            writer.writeList(v)
+        }
+        // 注解
+        writer.writeList(annotations)
+        // 返回值
+        writer.writeObj(result)
     }
 }

@@ -4,6 +4,7 @@ import org.tabooproject.reflex.ClassAnnotation
 import org.tabooproject.reflex.Internal
 import org.tabooproject.reflex.JavaClassField
 import org.tabooproject.reflex.LazyClass
+import org.tabooproject.reflex.serializer.BinaryWriter
 import java.lang.reflect.Field
 import java.lang.reflect.Modifier
 
@@ -42,5 +43,8 @@ class InstantClassField(owner: LazyClass, private val field: Field) : JavaClassF
 
     override fun toString(): String {
         return "InstantClassField(field=$field)"
+    }
+
+    override fun writeTo(writer: BinaryWriter) {
     }
 }

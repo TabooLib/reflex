@@ -1,12 +1,25 @@
 package org.tabooproject.reflex
 
+import org.tabooproject.reflex.serializer.BinarySerializable
+import org.tabooproject.reflex.serializer.BinaryWriter
 import java.util.function.Supplier
 
 /**
- * @author 坏黑
- * @since 2022/1/21 6:47 PM
+ * 一个懒加载的类
+ *
+ * @property source 类地址，可能是 "." 也可能是 "/"，不确定
+ * @property isArray 是否未数组类型
+ * @property isInstant 是否已经实例化（是否已经加载，此时 classFinder 必定为空，getter 直接返回类本身）
+ * @property classFinder 类查找器
+ * @property getter 类获取器
  */
-open class LazyClass protected constructor(source: String, val isArray: Boolean, val isInstant: Boolean, val getter: Supplier<Class<*>?>) {
+open class LazyClass protected constructor(
+    source: String,
+    val isArray: Boolean,
+    val isInstant: Boolean,
+    val classFinder: ClassAnalyser.ClassFinder?,
+    val getter: Supplier<Class<*>?>,
+) : BinarySerializable {
 
     /**
      * 类的完全限定名称
@@ -48,6 +61,13 @@ open class LazyClass protected constructor(source: String, val isArray: Boolean,
         return "LazyClass(${if (isArray) "Array[$name]" else name})"
     }
 
+    override fun writeTo(writer: BinaryWriter) {
+        writer.writeInt(1) // 1：表示 LazyClass
+        writer.writeNullableString(name)
+        writer.writeBoolean(isArray)
+        writer.writeBoolean(isInstant)
+    }
+
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is LazyClass) return false
@@ -71,7 +91,7 @@ open class LazyClass protected constructor(source: String, val isArray: Boolean,
          * @return LazyClass 实例
          */
         fun of(clazz: Class<*>): LazyClass {
-            return LazyClass(clazz.name, isArray = false, isInstant = true) { clazz }
+            return LazyClass(clazz.name, isArray = false, isInstant = true, null) { clazz }
         }
 
         /**
@@ -82,7 +102,7 @@ open class LazyClass protected constructor(source: String, val isArray: Boolean,
          * @return LazyClass 实例
          */
         fun of(clazz: Class<*>, isArray: Boolean): LazyClass {
-            return LazyClass(clazz.name, isArray, true) { clazz }
+            return LazyClass(clazz.name, isArray, isInstant = true, null) { clazz }
         }
 
         /**
@@ -92,7 +112,7 @@ open class LazyClass protected constructor(source: String, val isArray: Boolean,
          * @return LazyClass 实例
          */
         fun of(source: String): LazyClass {
-            return LazyClass(source, isArray = false, isInstant = false) { runCatching { Class.forName(source.replace('/', '.')) }.getOrNull() }
+            return LazyClass(source, isArray = false, isInstant = false, null) { runCatching { Class.forName(source.replace('/', '.')) }.getOrNull() }
         }
 
         /**
@@ -103,7 +123,7 @@ open class LazyClass protected constructor(source: String, val isArray: Boolean,
          * @return LazyClass 实例
          */
         fun of(source: String, classFinder: ClassAnalyser.ClassFinder): LazyClass {
-            return LazyClass(source, isArray = false, isInstant = false) { classFinder.findClass(source.replace('/', '.')) }
+            return LazyClass(source, isArray = false, isInstant = false, classFinder) { classFinder.findClass(source.replace('/', '.')) }
         }
 
         /**
@@ -115,7 +135,7 @@ open class LazyClass protected constructor(source: String, val isArray: Boolean,
          * @return LazyClass 实例
          */
         fun of(source: String, isArray: Boolean, classFinder: ClassAnalyser.ClassFinder): LazyClass {
-            return LazyClass(source, isArray, false) { classFinder.findClass(source.replace('/', '.')) }
+            return LazyClass(source, isArray, isInstant = false, classFinder) { classFinder.findClass(source.replace('/', '.')) }
         }
 
         /**
@@ -126,7 +146,7 @@ open class LazyClass protected constructor(source: String, val isArray: Boolean,
          * @return LazyClass 实例
          */
         fun of(source: String, getter: Supplier<Class<*>?>): LazyClass {
-            return LazyClass(source, isArray = false, isInstant = false, getter = getter)
+            return LazyClass(source, isArray = false, isInstant = false, null, getter = getter)
         }
     }
 }

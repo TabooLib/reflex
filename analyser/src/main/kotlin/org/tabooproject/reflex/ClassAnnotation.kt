@@ -2,13 +2,14 @@ package org.tabooproject.reflex
 
 import org.objectweb.asm.Type
 import org.tabooproject.reflex.asm.AsmSignature
+import org.tabooproject.reflex.serializer.BinarySerializable
 
 /**
  * @author 坏黑
  * @since 2022/1/24 7:42 PM
  */
 @Suppress("UNCHECKED_CAST")
-abstract class ClassAnnotation(val source: LazyClass) {
+abstract class ClassAnnotation(val source: LazyClass) : BinarySerializable {
 
     abstract fun <T> property(name: String): T?
 

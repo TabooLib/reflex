@@ -1,6 +1,7 @@
 package org.tabooproject.reflex.reflection
 
 import org.tabooproject.reflex.*
+import org.tabooproject.reflex.serializer.BinaryWriter
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 
@@ -58,5 +59,8 @@ class InstantClassMethod(owner: LazyClass, private val method: Method) : JavaCla
 
     override fun toString(): String {
         return "InstantClassMethod(method=$method)"
+    }
+
+    override fun writeTo(writer: BinaryWriter) {
     }
 }

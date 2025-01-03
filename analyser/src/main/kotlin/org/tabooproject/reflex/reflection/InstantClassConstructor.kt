@@ -1,6 +1,7 @@
 package org.tabooproject.reflex.reflection
 
 import org.tabooproject.reflex.*
+import org.tabooproject.reflex.serializer.BinaryWriter
 import java.lang.reflect.Constructor
 import java.lang.reflect.Modifier
 
@@ -43,5 +44,8 @@ class InstantClassConstructor(owner: LazyClass, private val constructor: Constru
 
     override fun toString(): String {
         return "InstantClassConstructor(constructor=$constructor)"
+    }
+
+    override fun writeTo(writer: BinaryWriter) {
     }
 }

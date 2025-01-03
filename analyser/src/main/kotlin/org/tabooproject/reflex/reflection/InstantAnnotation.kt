@@ -3,6 +3,7 @@ package org.tabooproject.reflex.reflection
 import org.tabooproject.reflex.ClassAnnotation
 import org.tabooproject.reflex.Internal
 import org.tabooproject.reflex.LazyClass
+import org.tabooproject.reflex.serializer.BinaryWriter
 
 /**
  * @author 坏黑
@@ -32,6 +33,9 @@ class InstantAnnotation(val annotation: Annotation) : ClassAnnotation(LazyClass.
 
     override fun toString(): String {
         return "InstantAnnotation() ${super.toString()}"
+    }
+
+    override fun writeTo(writer: BinaryWriter) {
     }
 
     companion object {

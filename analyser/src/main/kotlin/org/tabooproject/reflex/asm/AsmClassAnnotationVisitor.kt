@@ -19,15 +19,18 @@ class AsmClassAnnotationVisitor(
 ) : AnnotationVisitor(Opcodes.ASM9, annotationVisitor), Opcodes {
 
     val source = AsmSignature.signatureToClass(descriptor, classFinder).first()
-    val map = HashMap<String, Any>()
-    val array = ArrayList<Any>()
+    val propertyMap = HashMap<String, Any>()
+
+    // 临时列表
+    // 用来读取匿名数据
+    val tempArray = ArrayList<Any>()
 
     override fun visit(name: String?, value: Any) {
         super.visit(name, value)
         if (name == null) {
-            array += value
+            tempArray += value
         } else {
-            map[name] = value
+            propertyMap[name] = value
         }
     }
 
@@ -35,9 +38,9 @@ class AsmClassAnnotationVisitor(
         super.visitEnum(name, descriptor, value)
         val enum = LazyEnum(AsmSignature.signatureToClass(descriptor, classFinder).first(), value)
         if (name == null) {
-            array += enum
+            tempArray += enum
         } else {
-            map[name] = enum
+            propertyMap[name] = enum
         }
     }
 
@@ -53,12 +56,12 @@ class AsmClassAnnotationVisitor(
         super.visitEnd()
         if (context != null) {
             // 取二者之一不为空的值
-            val value = array.ifEmpty { map.ifEmpty { null } } ?: return
+            val value = tempArray.ifEmpty { propertyMap.ifEmpty { null } } ?: return
             // 有名字则为对象，反之为数组
             if (context.name != null) {
-                context.visitor.map[context.name] = value
+                context.visitor.propertyMap[context.name] = value
             } else {
-                context.visitor.array += value
+                context.visitor.tempArray += value
             }
         }
     }

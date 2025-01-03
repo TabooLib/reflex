@@ -1,10 +1,12 @@
 package org.tabooproject.reflex
 
+import org.tabooproject.reflex.serializer.BinarySerializable
+
 /**
  * @author 坏黑
  * @since 2022/1/21 6:41 PM
  */
-abstract class ClassField(name: String, owner: LazyClass) : ClassMember(name, owner) {
+abstract class ClassField(name: String, owner: LazyClass) : ClassMember(name, owner), BinarySerializable {
 
     abstract val type: LazyClass
 

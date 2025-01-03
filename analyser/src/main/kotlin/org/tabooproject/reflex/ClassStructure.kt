@@ -1,5 +1,6 @@
 package org.tabooproject.reflex
 
+import org.tabooproject.reflex.serializer.BinarySerializable
 import java.lang.reflect.Modifier
 import java.util.*
 
@@ -17,7 +18,7 @@ abstract class ClassStructure(
     fields: List<ClassField>,
     methods: List<ClassMethod>,
     constructors: List<ClassConstructor>,
-) {
+) : BinarySerializable {
 
     val name by lazy(LazyThreadSafetyMode.NONE) { runCatching { owner.name }.getOrNull() }
     val simpleName by lazy(LazyThreadSafetyMode.NONE) { runCatching { owner.simpleName }.getOrNull() }

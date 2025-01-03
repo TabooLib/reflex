@@ -1,6 +1,7 @@
 package org.tabooproject.reflex.asm
 
 import org.tabooproject.reflex.*
+import org.tabooproject.reflex.serializer.BinaryWriter
 import java.lang.reflect.Modifier
 
 /**
@@ -46,5 +47,22 @@ class AsmClassConstructor(
 
     override fun toString(): String {
         return "AsmClassConstructor(descriptor='$descriptor', access=$access) ${super.toString()}"
+    }
+
+    override fun writeTo(writer: BinaryWriter) {
+        writer.writeNullableString(name)
+        writer.writeObj(owner)
+        writer.writeNullableString(descriptor)
+        writer.writeInt(access)
+        // 参数注解
+        writer.writeInt(parameter.size)
+        parameterAnnotations.forEach { (k, v) ->
+            writer.writeInt(k)
+            writer.writeList(v)
+        }
+        // 注解
+        writer.writeList(annotations)
+        // 参数
+        writer.writeList(parameter)
     }
 }

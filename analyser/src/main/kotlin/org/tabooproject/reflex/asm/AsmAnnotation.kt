@@ -2,17 +2,21 @@ package org.tabooproject.reflex.asm
 
 import org.tabooproject.reflex.ClassAnnotation
 import org.tabooproject.reflex.Internal
+import org.tabooproject.reflex.LazyClass
+import org.tabooproject.reflex.serializer.BinaryWriter
 
 /**
  * @author 坏黑
  * @since 2022/1/24 8:48 PM
  */
 @Internal
-class AsmAnnotation(val annotationVisitor: AsmClassAnnotationVisitor) : ClassAnnotation(annotationVisitor.source) {
+class AsmAnnotation(source: LazyClass, val propertyMap: MutableMap<String, Any>) : ClassAnnotation(source) {
+
+    constructor(annotationVisitor: AsmClassAnnotationVisitor) : this(annotationVisitor.source, annotationVisitor.propertyMap)
 
     @Suppress("UNCHECKED_CAST")
     override fun <T> property(name: String): T? {
-        return annotationVisitor.map[name] as? T?
+        return propertyMap[name] as? T?
     }
 
     override fun <T> property(name: String, def: T): T {
@@ -20,15 +24,20 @@ class AsmAnnotation(val annotationVisitor: AsmClassAnnotationVisitor) : ClassAnn
     }
 
     override fun properties(): Map<String, Any> {
-        return annotationVisitor.map
+        return propertyMap
     }
 
     override fun propertyKeys(): Set<String> {
-        return annotationVisitor.map.keys
+        return propertyMap.keys
     }
 
     override fun toString(): String {
         return "AsmAnnotation() ${super.toString()}"
+    }
+
+    override fun writeTo(writer: BinaryWriter) {
+        writer.writeObj(source)
+        writer.writeAnnotationProperties(propertyMap)
     }
 
     companion object {

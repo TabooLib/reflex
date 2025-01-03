@@ -1,5 +1,7 @@
 package org.tabooproject.reflex
 
+import org.tabooproject.reflex.serializer.BinarySerializable
+import org.tabooproject.reflex.serializer.BinaryWriter
 import java.io.InputStream
 import java.util.concurrent.ConcurrentHashMap
 
@@ -7,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap
  * @author 坏黑
  * @since 2022/1/22 2:25 AM
  */
-class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) {
+class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) : BinarySerializable {
 
     /** 类名 */
     val name = structure.name
@@ -223,9 +225,13 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) {
         return "ReflexClass $mode($name)"
     }
 
+    override fun writeTo(writer: BinaryWriter) {
+        writer.writeObj(structure)
+    }
+
     companion object {
 
-        private val analyseMap = ConcurrentHashMap<String, ReflexClass>()
+        val reflexClassCacheMap = ConcurrentHashMap<String, ReflexClass>()
 
         fun of(clazz: Class<*>): ReflexClass {
             return of(clazz, true)
@@ -240,12 +246,12 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) {
         }
 
         fun of(clazz: Class<*>, mode: AnalyseMode, saving: Boolean): ReflexClass {
-            if (saving && analyseMap.containsKey(clazz.name)) {
-                return analyseMap[clazz.name]!!
+            if (saving && reflexClassCacheMap.containsKey(clazz.name)) {
+                return reflexClassCacheMap[clazz.name]!!
             }
             return ReflexClass(ClassAnalyser.analyse(clazz, mode), mode).also {
                 if (saving) {
-                    analyseMap[clazz.name] = it
+                    reflexClassCacheMap[clazz.name] = it
                 }
             }
         }
@@ -255,12 +261,12 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) {
         }
 
         fun of(clazz: LazyClass, inputStream: InputStream, saving: Boolean): ReflexClass {
-            if (saving && analyseMap.containsKey(clazz.name)) {
-                return analyseMap[clazz.name]!!
+            if (saving && reflexClassCacheMap.containsKey(clazz.name)) {
+                return reflexClassCacheMap[clazz.name]!!
             }
             return ReflexClass(ClassAnalyser.analyseByASM(clazz, inputStream), AnalyseMode.ASM_ONLY).also {
                 if (saving) {
-                    analyseMap[clazz.name] = it
+                    reflexClassCacheMap[clazz.name] = it
                 }
             }
         }

@@ -1,5 +1,7 @@
 package org.tabooproject.reflex
 
+import org.tabooproject.reflex.serializer.BinaryWriter
+
 /**
  * Reflex
  * org.tabooproject.reflex.JavaClassStructure
@@ -70,5 +72,16 @@ class JavaClassStructure(
 
     override fun isAnnotationPresent(annotation: Class<out Annotation>): Boolean {
         return annotations.any { it.source.name == annotation.name }
+    }
+
+    override fun writeTo(writer: BinaryWriter) {
+        writer.writeObj(owner)
+        writer.writeInt(access)
+        writer.writeNullableObj(superclass)
+        writer.writeList(interfaces)
+        writer.writeList(annotations)
+        writer.writeList(fields)
+        writer.writeList(methods)
+        writer.writeList(constructors)
     }
 }
