@@ -46,5 +46,6 @@ class InstantClassField(owner: LazyClass, private val field: Field) : JavaClassF
     }
 
     override fun writeTo(writer: BinaryWriter) {
+        error("InstantClassField cannot be serialized")
     }
 }

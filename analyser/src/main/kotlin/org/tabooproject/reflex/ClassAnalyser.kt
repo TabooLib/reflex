@@ -95,6 +95,11 @@ object ClassAnalyser {
 
     fun interface ClassFinder {
 
-        fun findClass(name: String): Class<*>
+        fun findClass(name: String): Class<*>?
+
+        companion object {
+
+            val default = ClassFinder { Class.forName(it.replace('/', '.')) }
+        }
     }
 }

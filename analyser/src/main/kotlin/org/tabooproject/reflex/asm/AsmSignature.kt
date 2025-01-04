@@ -7,36 +7,41 @@ import org.tabooproject.reflex.ClassAnalyser
 import org.tabooproject.reflex.Internal
 import org.tabooproject.reflex.LazyClass
 import org.tabooproject.reflex.Reflection
+import java.util.concurrent.ConcurrentHashMap
 
 @Internal
 object AsmSignature {
 
-    fun signatureToClass(signature: String, classFinder: ClassAnalyser.ClassFinder): List<LazyClass> {
-        val list = ArrayList<LazyClass>()
-        var visitArrayType = false
-        SignatureReader(signature).accept(object : SignatureWriter() {
+    val cacheMap = ConcurrentHashMap<String, List<LazyClass>>()
 
-            override fun visitClassType(name: String) {
-                super.visitClassType(name)
-                list.add(LazyClass.of(name, visitArrayType, classFinder))
-            }
+    fun signatureToClass(signature: String, classFinder: ClassAnalyser.ClassFinder? = null): List<LazyClass> {
+        return cacheMap.getOrPut(signature) {
+            val list = ArrayList<LazyClass>()
+            var dimensions = 0
+            SignatureReader(signature).accept(object : SignatureWriter() {
 
-            override fun visitBaseType(descriptor: Char) {
-                super.visitBaseType(descriptor)
-                list.add(LazyClass.of(Reflection.getPrimitiveType(descriptor), visitArrayType))
-            }
+                override fun visitClassType(name: String) {
+                    super.visitClassType(name)
+                    list.add(LazyClass.of(name, dimensions, isPrimitive = false, classFinder))
+                }
 
-            override fun visitArrayType(): SignatureVisitor {
-                super.visitArrayType()
-                visitArrayType = true
-                return this
+                override fun visitBaseType(descriptor: Char) {
+                    super.visitBaseType(descriptor)
+                    list.add(LazyClass.of(descriptor.toString(), dimensions, isPrimitive = true) { Reflection.getPrimitiveType(descriptor) })
+                }
+
+                override fun visitArrayType(): SignatureVisitor {
+                    super.visitArrayType()
+                    dimensions++
+                    return this
+                }
+            })
+            if (list.lastOrNull()?.name == "V") {
+                // Caused by: java.lang.NoSuchMethodError: 'java.lang.Object java.util.ArrayList.removeLast()'
+                // 你在逗我玩吗兄弟？
+                list.removeAt(list.size - 1)
             }
-        })
-        if (list.lastOrNull()?.name == "void") {
-            // Caused by: java.lang.NoSuchMethodError: 'java.lang.Object java.util.ArrayList.removeLast()'
-            // 你在逗我玩吗兄弟？
-            list.removeAt(list.size - 1)
+            return list
         }
-        return list
     }
 }

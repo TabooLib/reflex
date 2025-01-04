@@ -1,5 +1,7 @@
 package org.tabooproject.reflex
 
+import org.tabooproject.reflex.asm.AsmClassField
+import org.tabooproject.reflex.serializer.BinaryReader
 import org.tabooproject.reflex.serializer.BinarySerializable
 
 /**
@@ -25,5 +27,31 @@ abstract class ClassField(name: String, owner: LazyClass) : ClassMember(name, ow
 
     override fun toString(): String {
         return "ClassField(type=$type) ${super.toString()}"
+    }
+
+    companion object {
+
+        fun of(reader: BinaryReader, classFinder: ClassAnalyser.ClassFinder?): ClassField {
+            val type = reader.readInt()
+            if (type == 1) {
+                val name = reader.readNullableString()!!
+                val owner = LazyClass.of(reader, classFinder)
+                val descriptor = reader.readNullableString()!!
+                val access = reader.readInt()
+                val annotations = reader.readAnnotationList(classFinder)
+                val type = LazyClass.of(reader, classFinder)
+                return AsmClassField(
+                    name,
+                    owner,
+                    descriptor,
+                    access,
+                    classFinder ?: ClassAnalyser.ClassFinder.default,
+                    annotations,
+                    type
+                )
+            } else {
+                error("Unknown type: $type")
+            }
+        }
     }
 }

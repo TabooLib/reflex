@@ -1,5 +1,6 @@
 package org.tabooproject.reflex
 
+import org.tabooproject.reflex.serializer.BinaryReader
 import org.tabooproject.reflex.serializer.BinaryWriter
 
 /**
@@ -75,13 +76,37 @@ class JavaClassStructure(
     }
 
     override fun writeTo(writer: BinaryWriter) {
+        // 反射模式不支持序列化
+        if (type == Type.REFLECTION) error("Cannot serialize reflection mode")
         writer.writeObj(owner)
         writer.writeInt(access)
         writer.writeNullableObj(superclass)
+        // println("write interfaces")
         writer.writeList(interfaces)
+        // println("write annotations")
         writer.writeList(annotations)
+        // println("write fields")
         writer.writeList(fields)
+        // println("write methods")
         writer.writeList(methods)
+        // println("write constructors")
         writer.writeList(constructors)
+    }
+
+    companion object {
+
+        fun of(reader: BinaryReader, classFinder: ClassAnalyser.ClassFinder?): JavaClassStructure {
+            return JavaClassStructure(
+                Type.ASM,
+                LazyClass.of(reader, classFinder),
+                reader.readInt(),
+                reader.readNullableClass(classFinder),
+                reader.readClassList(classFinder),
+                reader.readAnnotationList(classFinder),
+                reader.readFieldList(classFinder),
+                reader.readMethodList(classFinder),
+                reader.readConstructorList(classFinder)
+            )
+        }
     }
 }

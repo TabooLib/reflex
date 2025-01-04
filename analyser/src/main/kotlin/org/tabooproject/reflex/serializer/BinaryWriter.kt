@@ -11,7 +11,7 @@ import java.util.function.Consumer
 class BinaryWriter {
 
     private val byteArrayOutputStream = ByteArrayOutputStream()
-    private val output = DataOutputStream(byteArrayOutputStream)
+    val output = DataOutputStream(byteArrayOutputStream)
 
     /**
      * 写入可为空的字符串

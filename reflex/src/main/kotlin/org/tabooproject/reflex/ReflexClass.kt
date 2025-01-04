@@ -1,5 +1,6 @@
 package org.tabooproject.reflex
 
+import org.tabooproject.reflex.serializer.BinaryReader
 import org.tabooproject.reflex.serializer.BinarySerializable
 import org.tabooproject.reflex.serializer.BinaryWriter
 import java.io.InputStream
@@ -79,7 +80,7 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) : Binary
             // 伴生类
             isCompanion() -> {
                 name ?: error("Unknown class name.")
-                val parentClass = of(classFinder.findClass(name.substringBeforeLast('$')), mode)
+                val parentClass = of(classFinder.findClass(name.substringBeforeLast('$'))!!, mode)
                 parentClass.getLocalField("Companion").get()
             }
             // 单例类
@@ -269,6 +270,10 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) : Binary
                     reflexClassCacheMap[clazz.name] = it
                 }
             }
+        }
+
+        fun of(reader: BinaryReader, classFinder: ClassAnalyser.ClassFinder? = null): ReflexClass {
+            return ReflexClass(JavaClassStructure.of(reader, classFinder), AnalyseMode.ASM_ONLY)
         }
     }
 }

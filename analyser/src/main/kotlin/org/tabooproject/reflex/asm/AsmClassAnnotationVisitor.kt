@@ -15,7 +15,7 @@ class AsmClassAnnotationVisitor(
     annotationVisitor: AnnotationVisitor,
     val descriptor: String,
     val classFinder: ClassAnalyser.ClassFinder,
-    val context: Context? = null
+    val context: Context? = null,
 ) : AnnotationVisitor(Opcodes.ASM9, annotationVisitor), Opcodes {
 
     val source = AsmSignature.signatureToClass(descriptor, classFinder).first()

@@ -47,3 +47,14 @@ object Reflection {
         }
     }
 }
+
+fun Class<*>.getArrayDimensions(): Int {
+    var dimensions = 0
+    var currentClass: Class<*>? = this
+    // 通过检查类名来计算维度
+    while (currentClass?.isArray == true) {
+        dimensions++
+        currentClass = currentClass.componentType
+    }
+    return dimensions
+}

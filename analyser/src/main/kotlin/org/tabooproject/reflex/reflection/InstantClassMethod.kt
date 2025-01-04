@@ -18,7 +18,7 @@ class InstantClassMethod(owner: LazyClass, private val method: Method) : JavaCla
 
     val parameterLocal by lazy(LazyThreadSafetyMode.NONE) {
         val parameterAnnotations = method.parameterAnnotations
-        method.parameterTypes.mapIndexed { idx, it -> LazyAnnotatedClass.of(it, parameterAnnotations[idx].map { i -> InstantAnnotation(i) }) }
+        method.parameterTypes.mapIndexed { idx, it -> LazyAnnotatedClass.of(it, annotations = parameterAnnotations[idx].map { i -> InstantAnnotation(i) }) }
     }
 
     override val result: LazyClass
@@ -62,5 +62,6 @@ class InstantClassMethod(owner: LazyClass, private val method: Method) : JavaCla
     }
 
     override fun writeTo(writer: BinaryWriter) {
+        error("InstantClassMethod cannot be serialized")
     }
 }

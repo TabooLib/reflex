@@ -18,7 +18,7 @@ class InstantClassConstructor(owner: LazyClass, private val constructor: Constru
 
     val parameterLocal by lazy(LazyThreadSafetyMode.NONE) {
         val parameterAnnotations = constructor.parameterAnnotations
-        constructor.parameterTypes.mapIndexed { idx, it -> LazyAnnotatedClass.of(it, parameterAnnotations[idx].map { i -> InstantAnnotation(i) }) }
+        constructor.parameterTypes.mapIndexed { idx, it -> LazyAnnotatedClass.of(it, annotations = parameterAnnotations[idx].map { i -> InstantAnnotation(i) }) }
     }
 
     override val isStatic: Boolean
@@ -47,5 +47,6 @@ class InstantClassConstructor(owner: LazyClass, private val constructor: Constru
     }
 
     override fun writeTo(writer: BinaryWriter) {
+        error("InstantClassConstructor cannot be serialized")
     }
 }

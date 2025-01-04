@@ -10,7 +10,7 @@ import org.tabooproject.reflex.serializer.BinaryWriter
  * @since 2022/1/24 8:48 PM
  */
 @Internal
-class AsmAnnotation(source: LazyClass, val propertyMap: MutableMap<String, Any>) : ClassAnnotation(source) {
+class AsmAnnotation(source: LazyClass, val propertyMap: Map<String, Any>) : ClassAnnotation(source) {
 
     constructor(annotationVisitor: AsmClassAnnotationVisitor) : this(annotationVisitor.source, annotationVisitor.propertyMap)
 
@@ -36,8 +36,15 @@ class AsmAnnotation(source: LazyClass, val propertyMap: MutableMap<String, Any>)
     }
 
     override fun writeTo(writer: BinaryWriter) {
+        writer.writeInt(1) // 1: ASM MODE
         writer.writeObj(source)
-        writer.writeAnnotationProperties(propertyMap)
+        try {
+            writer.writeAnnotationProperties(propertyMap)
+        } catch (ex: Throwable) {
+            println("Failed to write annotation properties $propertyMap")
+            println("Source: $source")
+            throw ex
+        }
     }
 
     companion object {

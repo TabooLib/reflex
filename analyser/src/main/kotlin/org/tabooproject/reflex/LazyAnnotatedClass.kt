@@ -8,14 +8,16 @@ import java.util.function.Supplier
  * @since 2022/1/21 6:47 PM
  */
 @Internal
-open class LazyAnnotatedClass protected constructor(
+open class LazyAnnotatedClass internal constructor(
     source: String,
-    isArray: Boolean,
+    dimensions: Int,
     isInstant: Boolean,
-    classFinder: ClassAnalyser.ClassFinder?,
-    getter: Supplier<Class<*>?>,
+    isPrimitive: Boolean,
+    classGetter: Supplier<Class<*>?>,
     val annotations: List<ClassAnnotation>,
-) : LazyClass(source, isArray, isInstant, classFinder, getter) {
+    name: String = source.replace('/', '.'),
+    simpleName: String = name.substringAfterLast('.'),
+) : LazyClass(source, dimensions, isInstant, isPrimitive, classGetter, name, simpleName) {
 
     fun getAnnotation(annotation: Class<out Annotation>): ClassAnnotation {
         return annotations.first { it.source.name == annotation.name }
@@ -26,14 +28,16 @@ open class LazyAnnotatedClass protected constructor(
     }
 
     override fun toString(): String {
-        return "LazyAnnotatedClass(${if (isArray) "Array[$name]" else name},@${annotations})"
+        return "LazyAnnotatedClass(${"[".repeat(dimensions)}$name,@${annotations})"
     }
 
     override fun writeTo(writer: BinaryWriter) {
         writer.writeInt(2) // 2：表示 LazyAnnotatedClass
         writer.writeNullableString(name)
-        writer.writeBoolean(isArray)
+        writer.writeNullableString(simpleName)
+        writer.writeInt(dimensions)
         writer.writeBoolean(isInstant)
+        writer.writeBoolean(isPrimitive)
         writer.writeList(annotations)
     }
 
@@ -53,49 +57,35 @@ open class LazyAnnotatedClass protected constructor(
 
     companion object {
 
-        fun of(clazz: Class<*>, annotations: List<ClassAnnotation>): LazyAnnotatedClass {
-            return LazyAnnotatedClass(clazz.name, isArray = false, isInstant = true, classFinder = null, getter = { clazz }, annotations = annotations)
+        fun of(clazz: Class<*>, dimensions: Int = clazz.getArrayDimensions(), annotations: List<ClassAnnotation>): LazyAnnotatedClass {
+            return LazyAnnotatedClass(clazz.name, dimensions, isInstant = true, clazz.isPrimitive, classGetter = { clazz }, annotations = annotations)
         }
 
-        fun of(clazz: Class<*>, annotations: List<ClassAnnotation>, isArray: Boolean): LazyAnnotatedClass {
-            return LazyAnnotatedClass(clazz.name, isArray, true, classFinder = null, { clazz }, annotations)
-        }
-
-        fun of(source: String, annotations: List<ClassAnnotation>): LazyAnnotatedClass {
+        fun of(source: String, dimensions: Int = 0, isPrimitive: Boolean = false, annotations: List<ClassAnnotation>): LazyAnnotatedClass {
             return LazyAnnotatedClass(
                 source,
-                isArray = false,
+                dimensions,
                 isInstant = false,
-                classFinder = null,
-                getter = { runCatching { Class.forName(source) }.getOrNull() },
+                isPrimitive,
+                classGetter = { runCatching { Class.forName(source) }.getOrNull() },
                 annotations
             )
         }
 
-        fun of(source: String, annotations: List<ClassAnnotation>, classFinder: ClassAnalyser.ClassFinder): LazyAnnotatedClass {
+        fun of(source: String, dimensions: Int = 0, isPrimitive: Boolean = false, annotations: List<ClassAnnotation>, classFinder: ClassAnalyser.ClassFinder?): LazyAnnotatedClass {
+            val finder = classFinder ?: ClassAnalyser.ClassFinder.default
             return LazyAnnotatedClass(
                 source,
-                isArray = false,
+                dimensions = 0,
                 isInstant = false,
-                classFinder,
-                getter = { classFinder.findClass(source.replace('/', '.')) },
-                annotations
-            )
-        }
-
-        fun of(source: String, annotations: List<ClassAnnotation>, isArray: Boolean, classFinder: ClassAnalyser.ClassFinder): LazyAnnotatedClass {
-            return LazyAnnotatedClass(
-                source,
-                isArray,
-                isInstant = false,
-                classFinder,
-                getter = { classFinder.findClass(source.replace('/', '.')) },
+                isPrimitive,
+                classGetter = { finder.findClass(source.replace('/', '.')) },
                 annotations
             )
         }
 
         fun of(source: String, getter: Supplier<Class<*>?>, annotations: List<ClassAnnotation>): LazyAnnotatedClass {
-            return LazyAnnotatedClass(source, isArray = false, isInstant = false, classFinder = null, getter, annotations)
+            return LazyAnnotatedClass(source, dimensions = 0, isInstant = false, isPrimitive = false, getter, annotations)
         }
     }
 }

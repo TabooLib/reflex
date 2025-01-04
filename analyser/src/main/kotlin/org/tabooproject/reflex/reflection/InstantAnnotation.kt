@@ -36,6 +36,7 @@ class InstantAnnotation(val annotation: Annotation) : ClassAnnotation(LazyClass.
     }
 
     override fun writeTo(writer: BinaryWriter) {
+        error("InstantAnnotation cannot be serialized")
     }
 
     companion object {

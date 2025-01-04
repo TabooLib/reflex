@@ -4,6 +4,7 @@ import org.objectweb.asm.signature.SignatureReader
 import org.objectweb.asm.signature.SignatureVisitor
 import org.objectweb.asm.signature.SignatureWriter
 import org.tabooproject.reflex.*
+import org.tabooproject.reflex.serializer.BinaryReader
 import org.tabooproject.reflex.serializer.BinaryWriter
 import java.lang.reflect.Modifier
 
@@ -17,17 +18,16 @@ class AsmClassMethod(
     owner: LazyClass,
     val descriptor: String,
     val access: Int,
-    val parameterAnnotations: Map<Int, ArrayList<AsmAnnotation>>,
+    val parameterAnnotations: Map<Int, List<ClassAnnotation>>,
     val classFinder: ClassAnalyser.ClassFinder,
     override val annotations: List<ClassAnnotation>,
+    // 延迟加载的数据
+    private var localResult: LazyClass? = null,
+    private val localParameter: MutableList<LazyAnnotatedClass> = ArrayList<LazyAnnotatedClass>(),
 ) : JavaClassMethod(name, owner) {
 
-    lateinit var localResult: LazyClass
-
-    val localParameter = ArrayList<LazyAnnotatedClass>()
-
     override val result: LazyClass
-        get() = localResult
+        get() = localResult!!
 
     override val parameter: List<LazyAnnotatedClass>
         get() = localParameter
@@ -62,44 +62,52 @@ class AsmClassMethod(
     fun read() {
         var visitParameterType = false
         var visitReturnType = false
-        var visitArrayType = false
+        var dimensions = 0
         SignatureReader(descriptor).accept(object : SignatureWriter() {
 
             override fun visitParameterType(): SignatureVisitor {
+                // println("  visitParameterType")
                 visitParameterType = true
+                visitReturnType = false
                 return super.visitParameterType()
             }
 
             override fun visitReturnType(): SignatureVisitor {
+                // println("  visitReturnType")
                 visitParameterType = false
                 visitReturnType = true
                 return super.visitReturnType()
             }
 
             override fun visitClassType(name: String) {
+                // println("  visitClassType $name")
                 if (visitParameterType) {
-                    localParameter.add(LazyAnnotatedClass.of(name, parameterAnnotations[localParameter.size] ?: emptyList(), visitArrayType, classFinder))
+                    val annotations = parameterAnnotations[localParameter.size] ?: emptyList()
+                    localParameter.add(LazyAnnotatedClass.of(name, dimensions, annotations = annotations, classFinder = classFinder))
                 }
                 if (visitReturnType) {
-                    localResult = LazyClass.of(name, visitArrayType, classFinder)
+                    localResult = LazyClass.of(name, dimensions, classFinder = classFinder)
                 }
-                visitArrayType = false
+                dimensions = 0
                 super.visitClassType(name)
             }
 
             override fun visitBaseType(descriptor: Char) {
+                // println("  visitBaseType $descriptor")
                 if (visitParameterType) {
-                    localParameter += LazyAnnotatedClass.of(Reflection.getPrimitiveType(descriptor), parameterAnnotations[localParameter.size] ?: emptyList(), visitArrayType)
+                    val annotations = parameterAnnotations[localParameter.size] ?: emptyList()
+                    localParameter += LazyAnnotatedClass.of(descriptor.toString(), dimensions, isPrimitive = true, annotations) { Reflection.getPrimitiveType(descriptor) }
                 }
                 if (visitReturnType) {
-                    localResult = LazyClass.of(Reflection.getPrimitiveType(descriptor), visitArrayType)
+                    localResult = LazyClass.of(descriptor.toString(), dimensions, isPrimitive = true) { Reflection.getPrimitiveType(descriptor) }
                 }
-                visitArrayType = false
+                dimensions = 0
                 super.visitBaseType(descriptor)
             }
 
             override fun visitArrayType(): SignatureVisitor {
-                visitArrayType = true
+                // println("  visitArrayType")
+                dimensions++
                 return super.visitArrayType()
             }
         })
@@ -110,19 +118,69 @@ class AsmClassMethod(
     }
 
     override fun writeTo(writer: BinaryWriter) {
-        writer.writeNullableString(name)
-        writer.writeObj(owner)
-        writer.writeNullableString(descriptor)
-        writer.writeInt(access)
-        // 参数注解
-        writer.writeInt(parameter.size)
-        parameterAnnotations.forEach { (k, v) ->
-            writer.writeInt(k)
-            writer.writeList(v)
-        }
-        // 注解
-        writer.writeList(annotations)
+        writer.writeInt(1) // 1: ASM MODE
+        // 函数信息
+        writeTo(writer, name, owner, descriptor, access, parameterAnnotations, annotations, parameter)
         // 返回值
         writer.writeObj(result)
+    }
+
+    companion object {
+
+        fun writeTo(
+            writer: BinaryWriter,
+            name: String,
+            owner: LazyClass,
+            descriptor: String,
+            access: Int,
+            parameterAnnotations: Map<Int, List<ClassAnnotation>>,
+            annotations: List<ClassAnnotation>,
+            parameter: List<LazyAnnotatedClass>,
+        ) {
+            writer.writeNullableString(name)
+            writer.writeObj(owner)
+            writer.writeNullableString(descriptor)
+            writer.writeInt(access)
+            // 参数注解
+            writer.writeInt(parameterAnnotations.size)
+            parameterAnnotations.forEach { (k, v) ->
+                writer.writeInt(k)
+                writer.writeList(v)
+            }
+            // 注解
+            writer.writeList(annotations)
+            // 参数
+            writer.writeList(parameter)
+        }
+
+        fun readFrom(reader: BinaryReader, classFinder: ClassAnalyser.ClassFinder?): Method {
+            val name = reader.readNullableString()!!
+            val owner = LazyClass.of(reader, classFinder)
+            val descriptor = reader.readNullableString()!!
+            val access = reader.readInt()
+            // 参数注解
+            val parameterAnnotations = HashMap<Int, List<ClassAnnotation>>()
+            val size = reader.readInt()
+            for (i in 0 until size) {
+                val index = reader.readInt()
+                val annotations = reader.readAnnotationList(classFinder)
+                parameterAnnotations[index] = annotations
+            }
+            // 注解
+            val annotations = reader.readAnnotationList(classFinder)
+            // 参数
+            val parameter = reader.readAnnotationClassList(classFinder)
+            return Method(name, owner, descriptor, access, parameterAnnotations, annotations, parameter)
+        }
+
+        class Method(
+            val name: String,
+            val owner: LazyClass,
+            val descriptor: String,
+            val access: Int,
+            val parameterAnnotations: Map<Int, List<ClassAnnotation>>,
+            val annotations: List<ClassAnnotation>,
+            val parameter: MutableList<LazyAnnotatedClass>,
+        )
     }
 }

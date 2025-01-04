@@ -14,21 +14,23 @@ class AsmClassConstructor(
     owner: LazyClass,
     val descriptor: String,
     val access: Int,
-    val parameterAnnotations: Map<Int, ArrayList<AsmAnnotation>>,
+    val parameterAnnotations: Map<Int, List<ClassAnnotation>>,
     val classFinder: ClassAnalyser.ClassFinder,
     override val annotations: List<ClassAnnotation>,
+    override val parameter: List<LazyAnnotatedClass> = AsmSignature.signatureToClass(descriptor, classFinder)
+        .mapIndexed { idx, it ->
+            LazyAnnotatedClass(
+                it.name,
+                it.dimensions,
+                it.isInstant,
+                it.isPrimitive,
+                it.classGetter,
+                annotations = parameterAnnotations[idx] ?: emptyList(),
+                it.name,
+                it.simpleName
+            )
+        },
 ) : JavaClassConstructor(name, owner) {
-
-    val localParameter = AsmSignature.signatureToClass(descriptor, classFinder).mapIndexed { idx, it ->
-        if (it.isInstant) {
-            LazyAnnotatedClass.of(it.instance!!, parameterAnnotations[idx] ?: emptyList())
-        } else {
-            LazyAnnotatedClass.of(it.name, parameterAnnotations[idx] ?: emptyList(), classFinder)
-        }
-    }
-
-    override val parameter: List<LazyAnnotatedClass>
-        get() = localParameter
 
     override val isStatic: Boolean
         get() = true
@@ -50,19 +52,8 @@ class AsmClassConstructor(
     }
 
     override fun writeTo(writer: BinaryWriter) {
-        writer.writeNullableString(name)
-        writer.writeObj(owner)
-        writer.writeNullableString(descriptor)
-        writer.writeInt(access)
-        // 参数注解
-        writer.writeInt(parameter.size)
-        parameterAnnotations.forEach { (k, v) ->
-            writer.writeInt(k)
-            writer.writeList(v)
-        }
-        // 注解
-        writer.writeList(annotations)
-        // 参数
-        writer.writeList(parameter)
+        writer.writeInt(1) // 1: ASM MODE
+        // 函数信息
+        AsmClassMethod.writeTo(writer, name, owner, descriptor, access, parameterAnnotations, annotations, parameter)
     }
 }

@@ -15,10 +15,9 @@ class AsmClassField(
     val descriptor: String,
     val access: Int,
     val classFinder: ClassAnalyser.ClassFinder,
-    override val annotations: List<ClassAnnotation>
+    override val annotations: List<ClassAnnotation>,
+    override val type: LazyClass = AsmSignature.signatureToClass(descriptor, classFinder).first(),
 ) : JavaClassField(name, owner) {
-
-    override val type = AsmSignature.signatureToClass(descriptor, classFinder).first()
 
     override val isStatic: Boolean
         get() = Modifier.isStatic(access)
@@ -43,6 +42,7 @@ class AsmClassField(
     }
 
     override fun writeTo(writer: BinaryWriter) {
+        writer.writeInt(1) // 1: ASM MODE
         writer.writeNullableString(name)
         writer.writeObj(owner)
         writer.writeNullableString(descriptor)

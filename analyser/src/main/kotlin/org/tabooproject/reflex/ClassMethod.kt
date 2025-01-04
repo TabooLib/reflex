@@ -1,5 +1,7 @@
 package org.tabooproject.reflex
 
+import org.tabooproject.reflex.asm.AsmClassMethod
+import org.tabooproject.reflex.serializer.BinaryReader
 import org.tabooproject.reflex.serializer.BinarySerializable
 
 /**
@@ -25,7 +27,12 @@ abstract class ClassMethod(name: String, owner: LazyClass) : ClassMember(name, o
     abstract fun invokeStatic(vararg values: Any?): Any?
 
     val returnType: Class<*>
-        get() = result.instance ?: Unknown::class.java
+        get() = try {
+            result.instance ?: Unknown::class.java
+        } catch (ex: Throwable) {
+            println("Field to get return type of $this")
+            throw ex
+        }
 
     val parameterTypes by lazy(LazyThreadSafetyMode.NONE) {
         parameter.map { p -> p.instance ?: Unknown::class.java }.toTypedArray()
@@ -33,5 +40,30 @@ abstract class ClassMethod(name: String, owner: LazyClass) : ClassMember(name, o
 
     override fun toString(): String {
         return "ClassMethod(result=$result)"
+    }
+
+    companion object {
+
+        fun of(reader: BinaryReader, classFinder: ClassAnalyser.ClassFinder?): ClassMethod {
+            val type = reader.readInt()
+            if (type == 1) {
+                val method = AsmClassMethod.readFrom(reader, classFinder)
+                // 返回值
+                val result = LazyClass.of(reader, classFinder)
+                return AsmClassMethod(
+                    method.name,
+                    method.owner,
+                    method.descriptor,
+                    method.access,
+                    method.parameterAnnotations,
+                    classFinder ?: ClassAnalyser.ClassFinder.default,
+                    method.annotations,
+                    result,
+                    method.parameter
+                )
+            } else {
+                error("Unknown type: $type")
+            }
+        }
     }
 }

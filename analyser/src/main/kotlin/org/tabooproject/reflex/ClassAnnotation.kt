@@ -1,7 +1,9 @@
 package org.tabooproject.reflex
 
 import org.objectweb.asm.Type
+import org.tabooproject.reflex.asm.AsmAnnotation
 import org.tabooproject.reflex.asm.AsmSignature
+import org.tabooproject.reflex.serializer.BinaryReader
 import org.tabooproject.reflex.serializer.BinarySerializable
 
 /**
@@ -123,5 +125,19 @@ abstract class ClassAnnotation(val source: LazyClass) : BinarySerializable {
 
     override fun hashCode(): Int {
         return source.hashCode()
+    }
+
+    companion object {
+
+        fun of(reader: BinaryReader, classFinder: ClassAnalyser.ClassFinder?): ClassAnnotation {
+            val type = reader.readInt()
+            if (type == 1) {
+                val source = LazyClass.of(reader, classFinder)
+                val propertyMap = reader.readAnnotationProperties(classFinder)
+                return AsmAnnotation(source, propertyMap)
+            } else {
+                error("Unknown type: $type")
+            }
+        }
     }
 }

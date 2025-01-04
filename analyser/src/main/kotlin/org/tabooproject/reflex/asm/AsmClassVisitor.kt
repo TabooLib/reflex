@@ -25,11 +25,11 @@ class AsmClassVisitor(val owner: LazyClass, val classFinder: ClassAnalyser.Class
         this.access = access
         // 获取父类信息
         if (superName != null) {
-            this.superclass = LazyClass.of(superName, classFinder)
+            this.superclass = LazyClass.of(superName, classFinder = classFinder)
         }
         // 获取接口信息
         if (interfaces != null) {
-            this.interfaces += interfaces.map { LazyClass.of(it, classFinder) }
+            this.interfaces += interfaces.map { LazyClass.of(it, classFinder = classFinder) }
         }
     }
 
