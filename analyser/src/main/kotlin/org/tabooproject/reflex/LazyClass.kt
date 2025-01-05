@@ -75,7 +75,7 @@ open class LazyClass internal constructor(
     fun notfound(): Nothing = throw ClassNotFoundException("Class not found: $name")
 
     override fun toString(): String {
-        return "LazyClass(${"[".repeat(dimensions)}$name)"
+        return "LazyClass($name,dim=$dimensions)"
     }
 
     override fun writeTo(writer: BinaryWriter) {

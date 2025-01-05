@@ -28,7 +28,7 @@ open class LazyAnnotatedClass internal constructor(
     }
 
     override fun toString(): String {
-        return "LazyAnnotatedClass(${"[".repeat(dimensions)}$name,@${annotations})"
+        return "LazyAnnotatedClass($name,dim=$dimensions,@${annotations})"
     }
 
     override fun writeTo(writer: BinaryWriter) {
@@ -76,7 +76,7 @@ open class LazyAnnotatedClass internal constructor(
             val finder = classFinder ?: ClassAnalyser.ClassFinder.default
             return LazyAnnotatedClass(
                 source,
-                dimensions = 0,
+                dimensions,
                 isInstant = false,
                 isPrimitive,
                 classGetter = { finder.findClass(source.replace('/', '.')) },

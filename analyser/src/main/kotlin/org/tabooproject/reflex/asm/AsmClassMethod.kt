@@ -60,6 +60,7 @@ class AsmClassMethod(
         get() = Modifier.isSynchronized(access)
 
     fun read() {
+        // println("AsmClassMethod.read $name$descriptor")
         var visitParameterType = false
         var visitReturnType = false
         var dimensions = 0
@@ -80,10 +81,10 @@ class AsmClassMethod(
             }
 
             override fun visitClassType(name: String) {
-                // println("  visitClassType $name")
+                // println("  visitClassType $name, dim=$dimensions")
                 if (visitParameterType) {
                     val annotations = parameterAnnotations[localParameter.size] ?: emptyList()
-                    localParameter.add(LazyAnnotatedClass.of(name, dimensions, annotations = annotations, classFinder = classFinder))
+                    localParameter += LazyAnnotatedClass.of(name, dimensions, annotations = annotations, classFinder = classFinder)
                 }
                 if (visitReturnType) {
                     localResult = LazyClass.of(name, dimensions, classFinder = classFinder)
@@ -93,7 +94,7 @@ class AsmClassMethod(
             }
 
             override fun visitBaseType(descriptor: Char) {
-                // println("  visitBaseType $descriptor")
+                // println("  visitBaseType $descriptor, dim=$dimensions")
                 if (visitParameterType) {
                     val annotations = parameterAnnotations[localParameter.size] ?: emptyList()
                     localParameter += LazyAnnotatedClass.of(descriptor.toString(), dimensions, isPrimitive = true, annotations) { Reflection.getPrimitiveType(descriptor) }
