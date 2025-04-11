@@ -16,7 +16,9 @@ class LazyClassSerialize {
         val wrap = BinaryReader.from(byteArray)
         assert(wrap.readInt() == 1)
         assert(wrap.readNullableString() == "org.tabooproject.reflex.LazyClassSerialize")
-        assert(wrap.readBoolean() == false)
-        assert(wrap.readBoolean() == true)
+        assert(wrap.readNullableString() == "LazyClassSerialize")
+        assert(wrap.readInt() == 0)         // dimensions
+        assert(wrap.readBoolean() == true)  // isInstant
+        assert(wrap.readBoolean() == false) // isPrimitive
     }
 }
