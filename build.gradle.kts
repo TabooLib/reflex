@@ -48,8 +48,7 @@ subprojects {
 
     publishing {
         repositories {
-            maven("http://sacredcraft.cn:8081/repository/releases") {
-                isAllowInsecureProtocol = true
+            maven("https://repo.tabooproject.org/repository/releases") {
                 credentials {
                     username = project.findProperty("taboolibUsername").toString()
                     password = project.findProperty("taboolibPassword").toString()
