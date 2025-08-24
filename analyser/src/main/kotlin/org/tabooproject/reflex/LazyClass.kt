@@ -4,6 +4,9 @@ import org.tabooproject.reflex.serializer.BinaryReader
 import org.tabooproject.reflex.serializer.BinarySerializable
 import org.tabooproject.reflex.serializer.BinaryWriter
 import java.io.DataOutputStream
+import java.lang.ref.WeakReference
+import java.util.*
+import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Supplier
 
 /**
@@ -103,6 +106,14 @@ open class LazyClass internal constructor(
 
     companion object {
 
+        private data class CacheKey(val clazz: Class<*>, val dimensions: Int)
+        private data class StringCacheKey(val source: String, val dimensions: Int, val isPrimitive: Boolean, val finder: ClassAnalyser.ClassFinder)
+        private data class SupplierCacheKey(val source: String, val dimensions: Int, val isPrimitive: Boolean)
+        
+        private val classCache = ConcurrentHashMap<CacheKey, WeakReference<LazyClass>>()
+        private val stringCache = ConcurrentHashMap<StringCacheKey, WeakReference<LazyClass>>()
+        private val supplierCache = ConcurrentHashMap<SupplierCacheKey, WeakReference<LazyClass>>()
+
         /**
          * 创建一个 LazyClass 实例
          *
@@ -110,7 +121,14 @@ open class LazyClass internal constructor(
          * @return LazyClass 实例
          */
         fun of(clazz: Class<*>, dimensions: Int = clazz.getArrayDimensions()): LazyClass {
-            return LazyClass(clazz.name, dimensions, isInstant = true, clazz.isPrimitive, { clazz })
+            val key = CacheKey(clazz, dimensions)
+            val ref = classCache[key]?.get()
+            if (ref != null) {
+                return ref
+            }
+            val lazyClass = LazyClass(clazz.name, dimensions, isInstant = true, clazz.isPrimitive, { clazz })
+            classCache[key] = WeakReference(lazyClass)
+            return lazyClass
         }
 
         /**
@@ -122,7 +140,14 @@ open class LazyClass internal constructor(
          */
         fun of(source: String, dimensions: Int = 0, isPrimitive: Boolean = false, classFinder: ClassAnalyser.ClassFinder?): LazyClass {
             val finder = classFinder ?: ClassAnalyser.ClassFinder.default
-            return LazyClass(source, dimensions, isInstant = false, isPrimitive, { finder.findClass(source.replace('/', '.')) })
+            val key = StringCacheKey(source, dimensions, isPrimitive, finder)
+            val ref = stringCache[key]?.get()
+            if (ref != null) {
+                return ref
+            }
+            val lazyClass = LazyClass(source, dimensions, isInstant = false, isPrimitive, { finder.findClass(source.replace('/', '.')) })
+            stringCache[key] = WeakReference(lazyClass)
+            return lazyClass
         }
 
         /**
@@ -133,7 +158,14 @@ open class LazyClass internal constructor(
          * @return LazyClass 实例
          */
         fun of(source: String, dimensions: Int = 0, isPrimitive: Boolean = false, getter: Supplier<Class<*>?>): LazyClass {
-            return LazyClass(source, dimensions, isInstant = false, isPrimitive, classGetter = getter)
+            val key = SupplierCacheKey(source, dimensions, isPrimitive)
+            val ref = supplierCache[key]?.get()
+            if (ref != null) {
+                return ref
+            }
+            val lazyClass = LazyClass(source, dimensions, isInstant = false, isPrimitive, classGetter = getter)
+            supplierCache[key] = WeakReference(lazyClass)
+            return lazyClass
         }
 
         /**
@@ -148,13 +180,17 @@ open class LazyClass internal constructor(
             val isPrimitive = reader.readBoolean()
             val finder = classFinder ?: ClassAnalyser.ClassFinder.default
             val classGetter = Supplier { if (isPrimitive) Reflection.getPrimitiveType(name[0]) else finder.findClass(name) }
-            if (type == 1) {
-                return LazyClass(name, dimensions, isInstant, isPrimitive, classGetter, name, simpleName)
-            } else if (type == 2) {
-                val annotations = reader.readAnnotationList(classFinder)
-                return LazyAnnotatedClass(name, dimensions, isInstant, isPrimitive, classGetter, annotations, name, simpleName)
-            } else {
-                error("Unknown type: $type")
+            when (type) {
+                1 -> {
+                    return LazyClass(name, dimensions, isInstant, isPrimitive, classGetter, name, simpleName)
+                }
+                2 -> {
+                    val annotations = reader.readAnnotationList(classFinder)
+                    return LazyAnnotatedClass(name, dimensions, isInstant, isPrimitive, classGetter, annotations, name, simpleName)
+                }
+                else -> {
+                    error("Unknown type: $type")
+                }
             }
         }
 

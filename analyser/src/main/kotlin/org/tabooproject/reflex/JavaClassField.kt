@@ -8,36 +8,43 @@ package org.tabooproject.reflex
 abstract class JavaClassField(name: String, owner: LazyClass) : ClassField(name, owner) {
 
     private val handleGetter by lazy(LazyThreadSafetyMode.NONE) {
-        if (isStatic) {
+        val getter = if (isStatic) {
             UnsafeAccess.lookup.findStaticGetter(owner.instance, name, fieldType)
         } else {
             UnsafeAccess.lookup.findGetter(owner.instance, name, fieldType)
         }
+        getter.asType(getter.type().generic())
     }
 
     private val handleSetter by lazy(LazyThreadSafetyMode.NONE) {
-        if (isStatic) {
+        val setter = if (isStatic) {
             UnsafeAccess.lookup.findStaticSetter(owner.instance, name, fieldType)
         } else {
             UnsafeAccess.lookup.findSetter(owner.instance, name, fieldType)
         }
+        setter.asType(setter.type().generic())
     }
 
     override fun get(src: Any?): Any? {
         if (fieldType == Unknown::class.java) {
             throw NoClassDefFoundError("${type.name}.$name (${owner})")
         }
-        return if (isStatic) {
-            handleGetter.invokeWithArguments()
-        } else {
-            try {
-                handleGetter.bindTo(src).invokeWithArguments()
-            } catch (ex: ClassCastException) {
-                if (src == StaticSrc) {
-                    throw IllegalStateException("$name is not a static field", ex)
-                }
+        return try {
+            if (isStatic) {
+                handleGetter.invoke()
+            } else {
+                handleGetter.invoke(src)
+            }
+        } catch (ex: ClassCastException) {
+            if (!isStatic && src == StaticSrc) {
+                throw IllegalStateException("$name is not a static field", ex)
+            }
+            throw ex
+        } catch (ex: Throwable) {
+            if (ex is RuntimeException || ex is Error) {
                 throw ex
             }
+            throw RuntimeException(ex)
         }
     }
 
@@ -45,17 +52,22 @@ abstract class JavaClassField(name: String, owner: LazyClass) : ClassField(name,
         if (fieldType == Unknown::class.java) {
             throw NoClassDefFoundError("${type.name}.$name (${owner})")
         }
-        if (isStatic) {
-            handleSetter.invokeWithArguments(value)
-        } else {
-            try {
-                handleSetter.bindTo(src).invokeWithArguments(value)
-            } catch (ex: ClassCastException) {
-                if (src == StaticSrc) {
-                    throw IllegalStateException("$name is not a static field", ex)
-                }
+        try {
+            if (isStatic) {
+                handleSetter.invoke(value)
+            } else {
+                handleSetter.invoke(src, value)
+            }
+        } catch (ex: ClassCastException) {
+            if (!isStatic && src == StaticSrc) {
+                throw IllegalStateException("$name is not a static field", ex)
+            }
+            throw ex
+        } catch (ex: Throwable) {
+            if (ex is RuntimeException || ex is Error) {
                 throw ex
             }
+            throw RuntimeException(ex)
         }
     }
 }
