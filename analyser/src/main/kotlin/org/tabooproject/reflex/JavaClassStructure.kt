@@ -48,19 +48,21 @@ class JavaClassStructure(
     }
 
     override fun getMethodSilently(name: String, vararg parameter: Any?): ClassMethod? {
-        return methods.find { it.name == name && Reflection.isAssignableFrom(it.parameterTypes, parameter.map { p -> p?.javaClass }.toTypedArray()) }
+        val paramTypes = Array(parameter.size) { i -> parameter[i]?.javaClass }
+        return methods.find { it.name == name && Reflection.isAssignableFrom(it.parameterTypes, *paramTypes) }
     }
 
     override fun getMethodByTypeSilently(name: String, vararg parameter: Class<*>): ClassMethod? {
-        return methods.find { it.name == name && Reflection.isAssignableFrom(it.parameterTypes, parameter.toList().toTypedArray()) }
+        return methods.find { it.name == name && Reflection.isAssignableFrom(it.parameterTypes, *parameter) }
     }
 
     override fun getConstructorSilently(vararg parameter: Any?): ClassConstructor? {
-        return constructors.find { Reflection.isAssignableFrom(it.parameterTypes, parameter.map { p -> p?.javaClass }.toTypedArray()) }
+        val paramTypes = Array(parameter.size) { i -> parameter[i]?.javaClass }
+        return constructors.find { Reflection.isAssignableFrom(it.parameterTypes, *paramTypes) }
     }
 
     override fun getConstructorByTypeSilently(vararg parameter: Class<*>): ClassConstructor? {
-        return constructors.find { Reflection.isAssignableFrom(it.parameterTypes, parameter.toList().toTypedArray()) }
+        return constructors.find { Reflection.isAssignableFrom(it.parameterTypes, *parameter) }
     }
 
     override fun getAnnotation(annotation: Class<out Annotation>): ClassAnnotation {

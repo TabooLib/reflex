@@ -11,7 +11,7 @@ object Reflection {
 
     val autoboxing = runCatching { SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_1_5) }.getOrElse { true }
 
-    fun isAssignableFrom(left: Array<Class<*>>, right: Array<Class<*>?>): Boolean {
+    fun isAssignableFrom(left: Array<Class<*>>, vararg right: Class<*>?): Boolean {
         if (left.size != right.size) {
             return false
         }
