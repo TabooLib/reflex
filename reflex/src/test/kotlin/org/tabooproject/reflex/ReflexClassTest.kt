@@ -72,4 +72,10 @@ class ReflexClassTest {
         } catch (_: NoSuchMethodException) {
         }
     }
+
+    @Test
+    fun testGetMethodByType() {
+        targetReflexClass.getMethodByTypes("run")
+        targetReflexClass.getMethodByTypes("walk")
+    }
 }

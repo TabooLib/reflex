@@ -139,6 +139,30 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) : Binary
     }
 
     /**
+     * 获取构造器（静默版本）
+     * @param parameter 构造器参数
+     */
+    fun getConstructorSilently(vararg parameter: Any?): ClassConstructor? {
+        return structure.getConstructorSilently(*parameter)
+    }
+
+    /**
+     * 获取构造器（按类型）
+     * @param parameter 构造器参数类型
+     */
+    fun getConstructorByType(vararg parameter: Class<*>): ClassConstructor {
+        return structure.getConstructorByType(*parameter)
+    }
+
+    /**
+     * 获取构造器（按类型，静默版本）
+     * @param parameter 构造器参数类型
+     */
+    fun getConstructorByTypeSilently(vararg parameter: Class<*>): ClassConstructor? {
+        return structure.getConstructorByTypeSilently(*parameter)
+    }
+
+    /**
      * 获取字段
      * @param name 字段名
      * @param findToParent 是否向上查找父类
@@ -227,6 +251,49 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) : Binary
     }
 
     /**
+     * 获取方法（按类型）
+     * @param name 方法名
+     * @param findToParent 是否向上查找父类
+     * @param remap 是否应用重映射
+     * @param parameter 方法参数类型
+     */
+    fun getMethodByTypes(name: String, findToParent: Boolean = true, remap: Boolean = true, vararg parameter: Class<*>): ClassMethod {
+        return getMethodByTypeSilently(name, findToParent, remap, *parameter)
+            ?: throw ExceptionFactory.noSuchMethodByType(structure.name, if (remap) remapMethodNameByTypes(name, *parameter) else name, *parameter)
+    }
+
+
+    /**
+     * 获取方法（按类型，静默版本）
+     * @param name 方法名
+     * @param findToParent 是否向上查找父类
+     * @param remap 是否应用重映射
+     * @param parameter 方法参数类型
+     * @return 方法对象，如果不存在则返回 null
+     */
+    fun getMethodByTypeSilently(name: String, findToParent: Boolean = true, remap: Boolean = true, vararg parameter: Class<*>): ClassMethod? {
+        val fixed = if (remap) remapMethodNameByTypes(name, *parameter) else name
+        val method = structure.getMethodByTypeSilently(fixed, *parameter)
+        if (method != null) {
+            return method
+        }
+        if (findToParent) {
+            val parentMethod = superclass?.getMethodByTypeSilently(name, true, remap, *parameter)
+            if (parentMethod != null) {
+                return parentMethod
+            }
+            // 在接口中查找
+            for (intf in interfaces) {
+                val interfaceMethod = intf.getMethodByTypeSilently(name, true, remap, *parameter)
+                if (interfaceMethod != null) {
+                    return interfaceMethod
+                }
+            }
+        }
+        return null
+    }
+
+    /**
      * 获取当前类的 [Class] 对象
      */
     fun toClass(): Class<out Any> {
@@ -261,6 +328,15 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) : Binary
      * 应用方法重映射
      */
     private fun remapMethodName(name: String, vararg parameter: Any?): String {
+        var fixed = name
+        Reflex.remapper.forEach { fixed = it.method(structure.name ?: return@forEach, fixed, *parameter) }
+        return fixed
+    }
+
+    /**
+     * 应用方法重映射（按类型）
+     */
+    private fun remapMethodNameByTypes(name: String, vararg parameter: Class<*>): String {
         var fixed = name
         Reflex.remapper.forEach { fixed = it.method(structure.name ?: return@forEach, fixed, *parameter) }
         return fixed
