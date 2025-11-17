@@ -30,7 +30,7 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) : Binary
     }
 
     /** 单例字段 */
-    private val singletonField by lazy(LazyThreadSafetyMode.NONE) { getLocalField("INSTANCE") }
+    private val singletonField by lazy(LazyThreadSafetyMode.NONE) { getFieldSilently("INSTANCE", findToParent = false, remap = false) }
 
     /** 单例实例 */
     private var singletonInstance: Any? = null
@@ -54,11 +54,7 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) : Binary
      * 通过检查是否存在 `INSTANCE` 字段来判断
      */
     fun isSingleton(): Boolean {
-        return try {
-            singletonField.isStatic
-        } catch (ex: NoSuchFieldException) {
-            false
-        }
+        return singletonField?.isStatic == true
     }
 
     /**
@@ -84,7 +80,7 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) : Binary
                 parentClass.getLocalField("Companion").get()
             }
             // 单例类
-            isSingleton() -> singletonField.get()
+            isSingleton() -> singletonField?.get()
             // 其他
             else -> null
         }
@@ -144,6 +140,17 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) : Binary
 
     /**
      * 获取字段
+     * @param name 字段名
+     * @param findToParent 是否向上查找父类
+     * @param remap 是否应用重映射
+     */
+    fun getField(name: String, findToParent: Boolean = true, remap: Boolean = true): ClassField {
+        return getFieldSilently(name, findToParent, remap)
+            ?: throw ExceptionFactory.noSuchField(structure.name, if (remap) remapFieldName(name) else name)
+    }
+
+    /**
+     * 获取字段
      * 不查父类，不重映射
      */
     fun getLocalField(name: String): ClassField {
@@ -151,25 +158,22 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) : Binary
     }
 
     /**
-     * 获取字段
+     * 获取字段（静默版本）
      * @param name 字段名
      * @param findToParent 是否向上查找父类
      * @param remap 是否应用重映射
+     * @return 字段对象，如果不存在则返回 null
      */
-    fun getField(name: String, findToParent: Boolean = true, remap: Boolean = true): ClassField {
-        var fixed = name
-        if (remap) {
-            Reflex.remapper.forEach { fixed = it.field(structure.name ?: return@forEach, fixed) }
+    fun getFieldSilently(name: String, findToParent: Boolean = true, remap: Boolean = true): ClassField? {
+        val fixed = if (remap) remapFieldName(name) else name
+        val field = structure.getFieldSilently(fixed)
+        if (field != null) {
+            return field
         }
-        return try {
-            structure.getField(fixed)
-        } catch (ex: NoSuchFieldException) {
-            if (findToParent) {
-                superclass?.getField(name, true, remap) ?: throw ex
-            } else {
-                throw ex
-            }
+        if (findToParent) {
+            return superclass?.getFieldSilently(name, true, remap)
         }
+        return null
     }
 
     /**
@@ -188,24 +192,38 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) : Binary
      * @param parameter 方法参数
      */
     fun getMethod(name: String, findToParent: Boolean = true, remap: Boolean = true, vararg parameter: Any?): ClassMethod {
-        var fixed = name
-        if (remap) {
-            Reflex.remapper.forEach { fixed = it.method(structure.name ?: return@forEach, fixed, *parameter) }
+        return getMethodSilently(name, findToParent, remap, *parameter)
+            ?: throw ExceptionFactory.noSuchMethod(structure.name, if (remap) remapMethodName(name, *parameter) else name, *parameter)
+    }
+
+    /**
+     * 获取方法（静默版本）
+     * @param name 方法名
+     * @param findToParent 是否向上查找父类
+     * @param remap 是否应用重映射
+     * @param parameter 方法参数
+     * @return 方法对象，如果不存在则返回 null
+     */
+    fun getMethodSilently(name: String, findToParent: Boolean = true, remap: Boolean = true, vararg parameter: Any?): ClassMethod? {
+        val fixed = if (remap) remapMethodName(name, *parameter) else name
+        val method = structure.getMethodSilently(fixed, *parameter)
+        if (method != null) {
+            return method
         }
-        return try {
-            structure.getMethod(fixed, *parameter)
-        } catch (ex: NoSuchMethodException) {
-            if (findToParent) {
-                try {
-                    superclass?.getMethod(name, true, remap, *parameter) ?: throw ex
-                } catch (ex: NoSuchMethodException) {
-                    interfaces.forEach { runCatching { return it.getMethod(name, true, remap, *parameter) } }
-                    throw ex
+        if (findToParent) {
+            val parentMethod = superclass?.getMethodSilently(name, true, remap, *parameter)
+            if (parentMethod != null) {
+                return parentMethod
+            }
+            // 在接口中查找
+            for (intf in interfaces) {
+                val interfaceMethod = intf.getMethodSilently(name, true, remap, *parameter)
+                if (interfaceMethod != null) {
+                    return interfaceMethod
                 }
-            } else {
-                throw ex
             }
         }
+        return null
     }
 
     /**
@@ -228,6 +246,24 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) : Binary
 
     override fun writeTo(writer: BinaryWriter) {
         writer.writeObj(structure)
+    }
+
+    /**
+     * 应用字段重映射
+     */
+    private fun remapFieldName(name: String): String {
+        var fixed = name
+        Reflex.remapper.forEach { fixed = it.field(structure.name ?: return@forEach, fixed) }
+        return fixed
+    }
+
+    /**
+     * 应用方法重映射
+     */
+    private fun remapMethodName(name: String, vararg parameter: Any?): String {
+        var fixed = name
+        Reflex.remapper.forEach { fixed = it.method(structure.name ?: return@forEach, fixed, *parameter) }
+        return fixed
     }
 
     companion object {

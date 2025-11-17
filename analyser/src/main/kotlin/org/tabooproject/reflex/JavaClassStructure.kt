@@ -24,47 +24,43 @@ class JavaClassStructure(
 ) : ClassStructure(type, owner, access, superclass, interfaces, annotations, fields, methods, constructors) {
 
     override fun getField(name: String): ClassField {
-        return fields.find { it.name == name } ?: throw NoSuchFieldException("${this.name}#$name")
+        return getFieldSilently(name) ?: throw ExceptionFactory.noSuchField(this.name, name)
     }
 
     override fun getMethod(name: String, vararg parameter: Any?): ClassMethod {
-        return methods.find { it.name == name && Reflection.isAssignableFrom(it.parameterTypes, parameter.map { p -> p?.javaClass }.toTypedArray()) }
-            ?: throw NoSuchMethodException("${this.name}#$name(${parameter.joinToString(";") { it?.javaClass?.name ?: "null" }})")
+        return getMethodSilently(name, *parameter) ?: throw ExceptionFactory.noSuchMethod(this.name, name, *parameter)
     }
 
     override fun getMethodByType(name: String, vararg parameter: Class<*>): ClassMethod {
-        return methods.find { it.name == name && Reflection.isAssignableFrom(it.parameterTypes, parameter.toList().toTypedArray()) }
-            ?: throw NoSuchMethodException("${this.name}#$name(${parameter.joinToString(";") { it.name }})")
+        return getMethodByTypeSilently(name, *parameter) ?: throw ExceptionFactory.noSuchMethodByType(this.name, name, *parameter)
     }
 
     override fun getConstructor(vararg parameter: Any?): ClassConstructor {
-        return constructors.find { Reflection.isAssignableFrom(it.parameterTypes, parameter.map { p -> p?.javaClass }.toTypedArray()) }
-            ?: throw NoSuchMethodException("${this.name}#<init>(${parameter.joinToString(";") { it?.javaClass?.name ?: "null" }})")
+        return getConstructorSilently(*parameter) ?: throw ExceptionFactory.noSuchConstructor(this.name, *parameter)
     }
 
     override fun getConstructorByType(vararg parameter: Class<*>): ClassConstructor {
-        return constructors.find { Reflection.isAssignableFrom(it.parameterTypes, parameter.toList().toTypedArray()) }
-            ?: throw NoSuchMethodException("${this.name}#<init>(${parameter.joinToString(";") { it.name }})")
+        return getConstructorByTypeSilently(*parameter) ?: throw ExceptionFactory.noSuchConstructorByType(this.name, *parameter)
     }
 
     override fun getFieldSilently(name: String): ClassField? {
-        return runCatching { getField(name) }.getOrNull()
+        return fields.find { it.name == name }
     }
 
     override fun getMethodSilently(name: String, vararg parameter: Any?): ClassMethod? {
-        return runCatching { getMethod(name, *parameter) }.getOrNull()
+        return methods.find { it.name == name && Reflection.isAssignableFrom(it.parameterTypes, parameter.map { p -> p?.javaClass }.toTypedArray()) }
     }
 
     override fun getMethodByTypeSilently(name: String, vararg parameter: Class<*>): ClassMethod? {
-        return runCatching { getMethodByType(name, *parameter) }.getOrNull()
+        return methods.find { it.name == name && Reflection.isAssignableFrom(it.parameterTypes, parameter.toList().toTypedArray()) }
     }
 
     override fun getConstructorSilently(vararg parameter: Any?): ClassConstructor? {
-        return runCatching { getConstructor(*parameter) }.getOrNull()
+        return constructors.find { Reflection.isAssignableFrom(it.parameterTypes, parameter.map { p -> p?.javaClass }.toTypedArray()) }
     }
 
     override fun getConstructorByTypeSilently(vararg parameter: Class<*>): ClassConstructor? {
-        return runCatching { getConstructorByType(*parameter) }.getOrNull()
+        return constructors.find { Reflection.isAssignableFrom(it.parameterTypes, parameter.toList().toTypedArray()) }
     }
 
     override fun getAnnotation(annotation: Class<out Annotation>): ClassAnnotation {
