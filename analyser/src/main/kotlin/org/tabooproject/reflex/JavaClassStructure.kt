@@ -44,16 +44,16 @@ class JavaClassStructure(
     }
 
     override fun getFieldSilently(name: String): ClassField? {
-        return fields.find { it.name == name }
+        return fieldsMap[name]
     }
 
     override fun getMethodSilently(name: String, vararg parameter: Any?): ClassMethod? {
         val paramTypes = Array(parameter.size) { i -> parameter[i]?.javaClass }
-        return methods.find { it.name == name && Reflection.isAssignableFrom(it.parameterTypes, *paramTypes) }
+        return methodsMap[name]?.find { Reflection.isAssignableFrom(it.parameterTypes, *paramTypes) }
     }
 
     override fun getMethodByTypeSilently(name: String, vararg parameter: Class<*>): ClassMethod? {
-        return methods.find { it.name == name && Reflection.isAssignableFrom(it.parameterTypes, *parameter) }
+        return methodsMap[name]?.find { Reflection.isAssignableFrom(it.parameterTypes, *parameter) }
     }
 
     override fun getConstructorSilently(vararg parameter: Any?): ClassConstructor? {

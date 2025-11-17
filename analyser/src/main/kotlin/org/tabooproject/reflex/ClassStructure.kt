@@ -20,13 +20,24 @@ abstract class ClassStructure(
     constructors: List<ClassConstructor>,
 ) : BinarySerializable {
 
+    // 类名
     val name by lazy(LazyThreadSafetyMode.NONE) { runCatching { owner.name }.getOrNull() }
+    // 简单类名
     val simpleName by lazy(LazyThreadSafetyMode.NONE) { runCatching { owner.simpleName }.getOrNull() }
 
+    // 接口
     val interfaces = LinkedList(interfaces)
     val annotations = LinkedList(annotations)
+
+    // 字段
     val fields = LinkedList(fields)
+    val fieldsMap = fields.associateBy { it.name }
+
+    // 方法
     val methods = LinkedList(methods)
+    val methodsMap = methods.groupBy { it.name }
+
+    // 构造函数
     val constructors = LinkedList(constructors)
 
     val isStatic: Boolean
