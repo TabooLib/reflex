@@ -20,6 +20,8 @@ class ReflexClassTest {
     private open class TargetParent(val user: String) : TargetParentParent() {
 
         fun walk() {}
+
+        fun consume(item: TargetParent) {}
     }
 
     private class Target(val id: Int, user: String) : TargetParent(user) {
@@ -77,5 +79,10 @@ class ReflexClassTest {
     fun testGetMethodByType() {
         targetReflexClass.getMethodByTypes("run")
         targetReflexClass.getMethodByTypes("walk")
+    }
+
+    @Test
+    fun testGetParentMethodByType() {
+        targetReflexClass.getMethodByTypes("consume", parameter = arrayOf(Unknown::class.java))
     }
 }

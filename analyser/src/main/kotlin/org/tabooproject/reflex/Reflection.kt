@@ -11,10 +11,12 @@ object Reflection {
 
     val autoboxing = runCatching { SystemUtils.isJavaVersionAtLeast(JavaVersion.JAVA_1_5) }.getOrElse { true }
 
+    val unknownType = Unknown::class.java
+
     fun isAssignableFrom(left: Array<Class<*>>, vararg right: Class<*>?): Boolean {
         if (left.size != right.size) return false
         if (left.isEmpty() && right.isEmpty()) return true
-        return left.indices.all { right[it] == null || getReferenceType(left[it]).isAssignableFrom(getReferenceType(right[it]!!)) }
+        return left.indices.all { right[it] == null || right[it] == unknownType || getReferenceType(left[it]).isAssignableFrom(getReferenceType(right[it]!!)) }
     }
 
     fun getPrimitiveType(descriptor: Char): Class<*> {
