@@ -10,9 +10,29 @@ import java.util.function.Supplier
  * 二进制读取器
  * 基于 ByteBuffer 实现高效读取
  */
-class BinaryReader(bytes: ByteArray) {
+class BinaryReader(bytes: ByteArray, offset: Int = 0) {
 
-    val buffer: ByteBuffer = ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN)
+    val buffer: ByteBuffer = ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN).also {
+        if (offset > 0) it.position(offset)
+    }
+
+    /** 获取当前读取位置 */
+    fun position(): Int = buffer.position()
+
+    /** 设置读取位置 */
+    fun position(pos: Int): BinaryReader {
+        buffer.position(pos)
+        return this
+    }
+
+    /** 跳过指定字节数 */
+    fun skip(bytes: Int): BinaryReader {
+        buffer.position(buffer.position() + bytes)
+        return this
+    }
+
+    /** 剩余可读字节数 */
+    fun remaining(): Int = buffer.remaining()
 
     fun readNullableString(): String? {
         val size = buffer.int
@@ -108,5 +128,7 @@ class BinaryReader(bytes: ByteArray) {
     companion object {
 
         fun from(bytes: ByteArray): BinaryReader = BinaryReader(bytes)
+
+        fun from(bytes: ByteArray, offset: Int): BinaryReader = BinaryReader(bytes, offset)
     }
 }

@@ -74,4 +74,18 @@ class BinaryWriter {
     fun toByteArray(): ByteArray {
         return byteArrayOutputStream.toByteArray()
     }
+
+    /**
+     * 获取当前已写入的字节数
+     */
+    fun size(): Int {
+        return byteArrayOutputStream.size()
+    }
+
+    /**
+     * 写入原始字节数组
+     */
+    fun writeBytes(bytes: ByteArray) {
+        output.write(bytes)
+    }
 }
