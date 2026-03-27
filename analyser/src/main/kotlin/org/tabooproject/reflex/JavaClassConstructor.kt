@@ -9,11 +9,11 @@ import java.lang.invoke.MethodType
 @Internal
 abstract class JavaClassConstructor(name: String, owner: LazyClass) : ClassConstructor(name, owner) {
 
-    private val handle by lazy(LazyThreadSafetyMode.NONE) {
+    private val handle by lazy {
         UnsafeAccess.lookup.findConstructor(owner.instance, MethodType.methodType(Void.TYPE, parameterTypes))
     }
 
-    private val optimizedInvoker by lazy(LazyThreadSafetyMode.NONE) {
+    private val optimizedInvoker by lazy {
         if (parameterTypes.isEmpty()) {
             handle.asType(handle.type().changeReturnType(Any::class.java))
         } else {

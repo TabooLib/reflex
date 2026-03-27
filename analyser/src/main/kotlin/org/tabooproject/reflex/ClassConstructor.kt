@@ -15,7 +15,7 @@ abstract class ClassConstructor(name: String, owner: LazyClass) : ClassMember(na
 
     abstract fun instance(vararg values: Any?): Any?
 
-    val parameterTypes by lazy(LazyThreadSafetyMode.NONE) {
+    val parameterTypes by lazy {
         parameter.map { p -> p.instance ?: Unknown::class.java }.toTypedArray()
     }
 

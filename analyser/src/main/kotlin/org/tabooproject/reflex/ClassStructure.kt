@@ -21,9 +21,9 @@ abstract class ClassStructure(
 ) : BinarySerializable {
 
     // 类名
-    val name by lazy(LazyThreadSafetyMode.NONE) { runCatching { owner.name }.getOrNull() }
+    val name by lazy { runCatching { owner.name }.getOrNull() }
     // 简单类名
-    val simpleName by lazy(LazyThreadSafetyMode.NONE) { runCatching { owner.simpleName }.getOrNull() }
+    val simpleName by lazy { runCatching { owner.simpleName }.getOrNull() }
 
     // 接口
     val interfaces = LinkedList(interfaces)

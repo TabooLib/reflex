@@ -12,11 +12,11 @@ import java.lang.reflect.Modifier
 @Internal
 class InstantClassConstructor(owner: LazyClass, private val constructor: Constructor<*>) : JavaClassConstructor("<init>", owner) {
 
-    val annotationsLocal by lazy(LazyThreadSafetyMode.NONE) {
+    val annotationsLocal by lazy {
         constructor.declaredAnnotations.map { InstantAnnotation(it) }
     }
 
-    val parameterLocal by lazy(LazyThreadSafetyMode.NONE) {
+    val parameterLocal by lazy {
         val parameterAnnotations = constructor.parameterAnnotations
         constructor.parameterTypes.mapIndexed { idx, it -> LazyAnnotatedClass.of(it, annotations = parameterAnnotations[idx].map { i -> InstantAnnotation(i) }) }
     }

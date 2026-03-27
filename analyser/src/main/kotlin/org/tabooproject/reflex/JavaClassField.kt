@@ -7,7 +7,7 @@ package org.tabooproject.reflex
 @Internal
 abstract class JavaClassField(name: String, owner: LazyClass) : ClassField(name, owner) {
 
-    private val handleGetter by lazy(LazyThreadSafetyMode.NONE) {
+    private val handleGetter by lazy {
         val getter = if (isStatic) {
             UnsafeAccess.lookup.findStaticGetter(owner.instance, name, fieldType)
         } else {
@@ -16,7 +16,7 @@ abstract class JavaClassField(name: String, owner: LazyClass) : ClassField(name,
         getter.asType(getter.type().generic())
     }
 
-    private val handleSetter by lazy(LazyThreadSafetyMode.NONE) {
+    private val handleSetter by lazy {
         val setter = if (isStatic) {
             UnsafeAccess.lookup.findStaticSetter(owner.instance, name, fieldType)
         } else {

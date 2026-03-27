@@ -26,7 +26,7 @@ abstract class ClassMethod(name: String, owner: LazyClass) : ClassMember(name, o
 
     abstract fun invokeStatic(vararg values: Any?): Any?
 
-    val returnType by lazy(LazyThreadSafetyMode.NONE) {
+    val returnType by lazy {
         try {
             result.instance ?: Unknown::class.java
         } catch (ex: Throwable) {
@@ -35,7 +35,7 @@ abstract class ClassMethod(name: String, owner: LazyClass) : ClassMember(name, o
         }
     }
 
-    val parameterTypes by lazy(LazyThreadSafetyMode.NONE) {
+    val parameterTypes by lazy {
         parameter.map { p -> p.instance ?: Unknown::class.java }.toTypedArray()
     }
 

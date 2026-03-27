@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap
 @Suppress("UNCHECKED_CAST")
 class LazyEnum(val source: LazyClass, val name: String) {
 
-    val instance by lazy(LazyThreadSafetyMode.NONE) {
+    val instance by lazy {
         allOf(source.instance as Class<Enum<*>>)[name]!!
     }
 

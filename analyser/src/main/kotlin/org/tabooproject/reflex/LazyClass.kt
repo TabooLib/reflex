@@ -43,7 +43,7 @@ open class LazyClass internal constructor(
      * dimensions = 2 时创建 new Type[0][0]
      * dimensions = 3 时创建 new Type[0][0][0]
      */
-    val instance by lazy(LazyThreadSafetyMode.NONE) {
+    val instance by lazy {
         if (isArray) {
             // 递归创建多维数组
             fun createArray(componentType: Class<*>, dim: Int): Class<*> {
@@ -63,7 +63,7 @@ open class LazyClass internal constructor(
      * 此类是否存在
      * 此方法会尝试加载类，如果加载失败，则返回 false
      */
-    val isExist by lazy(LazyThreadSafetyMode.NONE) {
+    val isExist by lazy {
         try {
             instance
             true

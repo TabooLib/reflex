@@ -19,18 +19,18 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) : Binary
     val simpleName = structure.simpleName
 
     /** 父类 */
-    val superclass by lazy(LazyThreadSafetyMode.NONE) {
+    val superclass by lazy {
         val superclass = structure.superclass
         if (superclass != null && superclass != Any::class.java) of(superclass.instance ?: superclass.notfound(), mode) else null
     }
 
     /** 接口 */
-    val interfaces by lazy(LazyThreadSafetyMode.NONE) {
+    val interfaces by lazy {
         structure.interfaces.map { of(it.instance ?: it.notfound(), mode) }
     }
 
     /** 单例字段 */
-    private val singletonField by lazy(LazyThreadSafetyMode.NONE) { getFieldSilently("INSTANCE", findToParent = false, remap = false) }
+    private val singletonField by lazy { getFieldSilently("INSTANCE", findToParent = false, remap = false) }
 
     /** 单例实例 */
     private var singletonInstance: Any? = null

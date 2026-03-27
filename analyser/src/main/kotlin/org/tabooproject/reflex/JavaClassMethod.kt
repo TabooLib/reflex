@@ -9,7 +9,7 @@ import java.lang.invoke.MethodType
 @Internal
 abstract class JavaClassMethod(name: String, owner: LazyClass) : ClassMethod(name, owner) {
 
-    private val handle by lazy(LazyThreadSafetyMode.NONE) {
+    private val handle by lazy {
         if (isStatic) {
             UnsafeAccess.lookup.findStatic(owner.instance, name, MethodType.methodType(returnType, parameterTypes))
         } else {
@@ -17,7 +17,7 @@ abstract class JavaClassMethod(name: String, owner: LazyClass) : ClassMethod(nam
         }
     }
 
-    private val optimizedInvoker by lazy(LazyThreadSafetyMode.NONE) {
+    private val optimizedInvoker by lazy {
         when {
             isStatic -> {
                 if (parameterTypes.isEmpty()) {
