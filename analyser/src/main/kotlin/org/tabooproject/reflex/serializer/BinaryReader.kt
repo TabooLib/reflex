@@ -1,6 +1,7 @@
 package org.tabooproject.reflex.serializer
 
 import org.tabooproject.reflex.*
+import java.nio.Buffer
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.charset.StandardCharsets
@@ -13,7 +14,7 @@ import java.util.function.Supplier
 class BinaryReader(bytes: ByteArray, offset: Int = 0) {
 
     val buffer: ByteBuffer = ByteBuffer.wrap(bytes).order(ByteOrder.BIG_ENDIAN).also {
-        if (offset > 0) it.position(offset)
+        if (offset > 0) (it as Buffer).position(offset)
     }
 
     /** 获取当前读取位置 */
@@ -21,13 +22,13 @@ class BinaryReader(bytes: ByteArray, offset: Int = 0) {
 
     /** 设置读取位置 */
     fun position(pos: Int): BinaryReader {
-        buffer.position(pos)
+        (buffer as Buffer).position(pos)
         return this
     }
 
     /** 跳过指定字节数 */
     fun skip(bytes: Int): BinaryReader {
-        buffer.position(buffer.position() + bytes)
+        (buffer as Buffer).position(buffer.position() + bytes)
         return this
     }
 
