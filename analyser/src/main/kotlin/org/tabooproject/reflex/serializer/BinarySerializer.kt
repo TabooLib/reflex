@@ -77,9 +77,9 @@ object BinarySerializer {
             SerializationType.BOOLEAN -> output.writeBoolean(value as Boolean)
             SerializationType.CHAR -> output.writeChar((value as Char).code)
             SerializationType.STRING -> {
-                val str = value as String
-                output.writeInt(str.length)
-                output.write(str.toByteArray(), 0, str.length)
+                val bytes = (value as String).toByteArray()
+                output.writeInt(bytes.size)
+                output.write(bytes)
             }
 
             SerializationType.ARRAY -> {
@@ -167,22 +167,25 @@ object BinarySerializer {
                 // 名字
                 LazyClass.writeTo(enum.javaClass, output)
                 // 枚举名
-                output.writeInt(enum.name.length)
-                output.write(enum.name.toByteArray(), 0, enum.name.length)
+                val bytes = enum.name.toByteArray()
+                output.writeInt(bytes.size)
+                output.write(bytes)
             }
 
             SerializationType.LAZY_ENUM -> {
                 val lazyEnum = value as LazyEnum
                 output.write(BinaryWriter().also { lazyEnum.source.writeTo(it) }.toByteArray())
-                output.writeInt(lazyEnum.name.length)
-                output.write(lazyEnum.name.toByteArray(), 0, lazyEnum.name.length)
+                val bytes = lazyEnum.name.toByteArray()
+                output.writeInt(bytes.size)
+                output.write(bytes)
             }
 
             SerializationType.TYPE -> {
                 val type = value as Type
                 val name = type.descriptor
-                output.writeInt(name.length)
-                output.write(name.toByteArray(), 0, name.length)
+                val bytes = name.toByteArray()
+                output.writeInt(bytes.size)
+                output.write(bytes)
             }
         }
     }

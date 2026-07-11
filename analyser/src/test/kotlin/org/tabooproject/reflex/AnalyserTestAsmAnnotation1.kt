@@ -1,7 +1,10 @@
 package org.tabooproject.reflex
 
+import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 import org.tabooproject.reflex.res.*
+import org.tabooproject.reflex.serializer.BinaryReader
+import org.tabooproject.reflex.serializer.BinaryWriter
 
 /**
  * Reflex
@@ -22,6 +25,9 @@ import org.tabooproject.reflex.res.*
 )
 class AnalyserTestAsmAnnotation1 {
 
+    @AnalyserAnnotation("是否关闭虚拟方块")
+    val localizedName = true
+
     @SubscribeEvent(priority = EventPriority.HIGH)
     fun event() {
     }
@@ -31,6 +37,17 @@ class AnalyserTestAsmAnnotation1 {
         val analyser = ClassAnalyser.analyseByASM(AnalyserTestAsmAnnotation1::class.java)
         val method = analyser.getMethod("event")
         assert(method.getAnnotation(SubscribeEvent::class.java).properties().size == 1)
+    }
+
+    @Test
+    fun testUnicodeAnnotationSerialization() {
+        val analyser = ClassAnalyser.analyseByASM(AnalyserTestAsmAnnotation1::class.java)
+        val annotation = analyser.getField("localizedName").getAnnotation(AnalyserAnnotation::class.java)
+        val writer = BinaryWriter()
+        annotation.writeTo(writer)
+
+        val decoded = ClassAnnotation.of(BinaryReader.from(writer.toByteArray()), ClassAnalyser.ClassFinder.default)
+        assertEquals("是否关闭虚拟方块", decoded.property("value", ""))
     }
 
     @Test
