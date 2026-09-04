@@ -57,8 +57,9 @@ abstract class JavaClassMethod(name: String, owner: LazyClass) : ClassMethod(nam
                     optimizedInvoker.invoke(src)
                 }
                 else -> {
-                    val boundHandle = optimizedInvoker.bindTo(src)
-                    boundHandle.invoke(values as Array<Any?>)
+                    // 泛化 spreader 的签名为 (Object, Object[])Object：接收者在前，参数数组在后。
+                    // 直接传入 src，避免每次 invoke 都执行 bindTo 产生 BoundMethodHandle 分配
+                    optimizedInvoker.invoke(src, values as Array<Any?>)
                 }
             }
         } catch (ex: ClassCastException) {
