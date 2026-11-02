@@ -47,6 +47,46 @@ CONTROL = [
 ]
 
 
+def draw_call_modes(out_path):
+    """绘制调用方式互斥对照（同一缓存 handle，只改变调用方式）。"""
+    modes = [
+        ("mhFieldUnreflectEachCall", "每次\nunreflect", 1221),
+        ("mhFieldInvokeWithArguments", "invokeWith\nArguments", 2612),
+        ("mhFieldBindToEachCall", "每次\nbindTo", 18347),
+        ("mhFieldInvoke", "invoke\n(当前采用)", 94094),
+        ("mhFieldBoundOnce", "bindTo 一次\n后复用", 246414),
+    ]
+    colors = ["#ef5350", "#ff7043", "#ffb74d", "#42a5f5", "#26a69a"]
+
+    labels = [m[1] for m in modes]
+    vals = [m[2] for m in modes]
+
+    fig, ax = plt.subplots(figsize=(9.5, 5.4))
+    bars = ax.bar(range(len(vals)), vals, color=colors, width=0.62)
+
+    ax.set_ylabel("吞吐量 (ops/ms，越高越好)")
+    ax.set_title("调用方式互斥对照：同一缓存 handle，只改变调用方式\n"
+                 "（-wi 5 -i 5 -f 3，15 个采样点）")
+    ax.set_xticks(range(len(labels)))
+    ax.set_xticklabels(labels, fontsize=9.5)
+    ax.grid(axis="y", linestyle="--", alpha=0.4)
+
+    base = vals[3]  # 以 invoke（当前采用）作为 1x 基准
+    for bar, v in zip(bars, vals):
+        ax.annotate(f"{v:,.0f}", (bar.get_x() + bar.get_width() / 2, v),
+                    ha="center", va="bottom", fontsize=9.5, fontweight="bold")
+        if v != base:
+            ratio = v / base
+            mark = f"{ratio:.2f}x" if ratio < 1 else f"{ratio:.1f}x"
+            ax.annotate(mark, (bar.get_x() + bar.get_width() / 2, v * 0.5),
+                        ha="center", va="center", fontsize=9, color="white",
+                        fontweight="bold")
+
+    fig.tight_layout()
+    fig.savefig(out_path, dpi=140)
+    plt.close(fig)
+
+
 def draw(group, title, out_path):
     labels, before_vals, after_vals = [], [], []
     for key, label in group:
@@ -103,4 +143,5 @@ if __name__ == "__main__":
          out.with_name(out.stem + "-affected" + out.suffix))
     draw(CONTROL, "对照组：未受优化影响，数据持平（验证测量环境一致）",
          out.with_name(out.stem + "-control" + out.suffix))
+    draw_call_modes(out.with_name(out.stem + "-call-modes" + out.suffix))
     print(f"已生成: {out.parent}")

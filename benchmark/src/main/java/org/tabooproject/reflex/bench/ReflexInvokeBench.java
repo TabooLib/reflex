@@ -43,7 +43,7 @@ public class ReflexInvokeBench {
 
     /** 被反射调用的目标类 */
     public static class Target {
-        private int counter = 0;
+        public int counter = 0;
 
         public int add(int a, int b) {
             return a + b;
@@ -78,6 +78,12 @@ public class ReflexInvokeBench {
     MethodHandle exactAdd;
     MethodHandle genericAddSpreader;
     MethodHandle exactNoArg;
+
+    /** 字段 setter/getter 的精确签名 handle，用于对照 invoke 与 invokeWithArguments */
+    MethodHandle cachedSetter;
+    MethodHandle cachedGetter;
+    /** bindTo 后的 handle，用于对照 bindTo 每次分配的开销 */
+    MethodHandle boundGetter;
 
     int sink;
 
@@ -114,6 +120,11 @@ public class ReflexInvokeBench {
         MethodHandle addHandle = LOOKUP.findVirtual(Target.class, "add", addType);
         MethodHandle spreader = addHandle.asSpreader(Object[].class, 2);
         genericAddSpreader = spreader.asType(spreader.type().generic());
+
+        // 字段 handle：对照 invoke / invokeWithArguments / bindTo 的开销差异
+        cachedSetter = LOOKUP.findSetter(Target.class, "counter", int.class);
+        cachedGetter = LOOKUP.findGetter(Target.class, "counter", int.class);
+        boundGetter = cachedGetter.bindTo(target);
     }
 
     // ==================== 有参实例方法 add(int,int) ====================
@@ -215,10 +226,50 @@ public class ReflexInvokeBench {
 
     @Benchmark
     public int unsafeAccessField() {
-        // 缓存 MethodHandle 后的 UnsafeAccess 路径
+        // 缓存 MethodHandle 后的 UnsafeAccess 路径（内部使用 invoke 直调）
         UnsafeAccess.INSTANCE.put(target, counterField, 42);
         Integer result = UnsafeAccess.INSTANCE.get(target, counterField);
         return result == null ? 0 : result;
+    }
+
+    // ==================== 互斥对照：同一缓存 handle，只改变调用方式 ====================
+    // 用于隔离 invoke / invokeWithArguments / bindTo 各自的成本，
+    // 排除 unreflect 缓存、Reflex 包装等因素的干扰。
+
+    /** 精确签名 handle + invoke 直调（当前 UnsafeAccess 采用的写法） */
+    @Benchmark
+    public int mhFieldInvoke() throws Throwable {
+        cachedSetter.invoke(target, 42);
+        return (int) cachedGetter.invoke(target);
+    }
+
+    /** 精确签名 handle + invokeWithArguments（改造前的写法，每次做运行时参数打包） */
+    @Benchmark
+    public int mhFieldInvokeWithArguments() throws Throwable {
+        cachedSetter.invokeWithArguments(target, 42);
+        return (Integer) cachedGetter.invokeWithArguments(target);
+    }
+
+    /** 每次调用都 bindTo 再 invoke（改造前的另一处开销来源） */
+    @Benchmark
+    public int mhFieldBindToEachCall() throws Throwable {
+        MethodHandle bound = cachedGetter.bindTo(target);
+        return (int) bound.invoke();
+    }
+
+    /** bindTo 一次后复用（bindTo 的正确用法对照） */
+    @Benchmark
+    public int mhFieldBoundOnce() throws Throwable {
+        return (int) boundGetter.invoke();
+    }
+
+    /** 每次调用都 unreflect（改造前的 UnsafeAccess 真实行为） */
+    @Benchmark
+    public int mhFieldUnreflectEachCall() throws Throwable {
+        MethodHandle setter = LOOKUP.unreflectSetter(counterField);
+        MethodHandle getter = LOOKUP.unreflectGetter(counterField);
+        setter.invoke(target, 42);
+        return (int) getter.invoke(target);
     }
 
     @TearDown(Level.Trial)
