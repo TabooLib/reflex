@@ -4,9 +4,7 @@ import org.tabooproject.reflex.serializer.BinaryReader
 import org.tabooproject.reflex.serializer.BinarySerializable
 import org.tabooproject.reflex.serializer.BinaryWriter
 import java.io.DataOutputStream
-import java.lang.ref.WeakReference
 import java.util.*
-import java.util.concurrent.ConcurrentHashMap
 import java.util.function.Supplier
 
 /**
@@ -107,12 +105,41 @@ open class LazyClass internal constructor(
     companion object {
 
         private data class CacheKey(val clazz: Class<*>, val dimensions: Int)
-        private data class StringCacheKey(val source: String, val dimensions: Int, val isPrimitive: Boolean, val finder: ClassAnalyser.ClassFinder)
-        private data class SupplierCacheKey(val source: String, val dimensions: Int, val isPrimitive: Boolean)
-        
-        private val classCache = ConcurrentHashMap<CacheKey, WeakReference<LazyClass>>()
-        private val stringCache = ConcurrentHashMap<StringCacheKey, WeakReference<LazyClass>>()
-        private val supplierCache = ConcurrentHashMap<SupplierCacheKey, WeakReference<LazyClass>>()
+        private data class StringCacheKey(val source: String, val dimensions: Int, val isPrimitive: Boolean, val finder: IdentityKey<ClassAnalyser.ClassFinder>)
+        private data class SupplierCacheKey(val source: String, val dimensions: Int, val isPrimitive: Boolean, val getter: IdentityKey<Supplier<Class<*>?>>)
+
+        /**
+         * 反序列化缓存 key。
+         * 包含 classFinder 身份，避免不同类加载器下同名类串用（跨插件场景）。
+         * finder 通常为长生命周期单例（每个插件的类加载器对应一个），不会被回收。
+         */
+        private data class DeserializeCacheKey(
+            val name: String,
+            val simpleName: String,
+            val dimensions: Int,
+            val isInstant: Boolean,
+            val isPrimitive: Boolean,
+            val finder: IdentityKey<ClassAnalyser.ClassFinder>,
+        )
+
+        private val classCache = WeakCache<CacheKey, LazyClass>()
+        private val stringCache = WeakCache<StringCacheKey, LazyClass>()
+        private val supplierCache = WeakCache<SupplierCacheKey, LazyClass>()
+
+        /**
+         * 反序列化专用缓存（type 1，无注解的 LazyClass）
+         * 同一个类名在反序列化时只创建一个实例，避免大量重复对象。
+         * 使用弱引用 + 惰性清理：反序列化去重仅在缓存存活期内生效，
+         * 失效条目会被自动清理，避免类名/类型对象无限累积。
+         */
+        private val deserializeCache = WeakCache<DeserializeCacheKey, LazyClass>()
+
+        /**
+         * 反序列化专用缓存（type 2，注解为空的 LazyAnnotatedClass）
+         * 大多数方法参数没有注解，annotations 为空时与 LazyClass 行为一致，可安全去重。
+         * 使用弱引用 + 惰性清理，理由同上。
+         */
+        private val deserializeAnnotatedCache = WeakCache<DeserializeCacheKey, LazyAnnotatedClass>()
 
         /**
          * 创建一个 LazyClass 实例
@@ -122,13 +149,9 @@ open class LazyClass internal constructor(
          */
         fun of(clazz: Class<*>, dimensions: Int = clazz.getArrayDimensions()): LazyClass {
             val key = CacheKey(clazz, dimensions)
-            val ref = classCache[key]?.get()
-            if (ref != null) {
-                return ref
+            return classCache.computeIfAbsent(key) {
+                LazyClass(clazz.name, dimensions, isInstant = true, clazz.isPrimitive, { clazz })
             }
-            val lazyClass = LazyClass(clazz.name, dimensions, isInstant = true, clazz.isPrimitive, { clazz })
-            classCache[key] = WeakReference(lazyClass)
-            return lazyClass
         }
 
         /**
@@ -140,14 +163,10 @@ open class LazyClass internal constructor(
          */
         fun of(source: String, dimensions: Int = 0, isPrimitive: Boolean = false, classFinder: ClassAnalyser.ClassFinder?): LazyClass {
             val finder = classFinder ?: ClassAnalyser.ClassFinder.default
-            val key = StringCacheKey(source, dimensions, isPrimitive, finder)
-            val ref = stringCache[key]?.get()
-            if (ref != null) {
-                return ref
+            val key = StringCacheKey(source, dimensions, isPrimitive, IdentityKey(finder))
+            return stringCache.computeIfAbsent(key) {
+                LazyClass(source, dimensions, isInstant = false, isPrimitive, { finder.findClass(source.replace('/', '.')) })
             }
-            val lazyClass = LazyClass(source, dimensions, isInstant = false, isPrimitive, { finder.findClass(source.replace('/', '.')) })
-            stringCache[key] = WeakReference(lazyClass)
-            return lazyClass
         }
 
         /**
@@ -158,18 +177,17 @@ open class LazyClass internal constructor(
          * @return LazyClass 实例
          */
         fun of(source: String, dimensions: Int = 0, isPrimitive: Boolean = false, getter: Supplier<Class<*>?>): LazyClass {
-            val key = SupplierCacheKey(source, dimensions, isPrimitive)
-            val ref = supplierCache[key]?.get()
-            if (ref != null) {
-                return ref
+            val key = SupplierCacheKey(source, dimensions, isPrimitive, IdentityKey(getter))
+            return supplierCache.computeIfAbsent(key) {
+                LazyClass(source, dimensions, isInstant = false, isPrimitive, classGetter = getter)
             }
-            val lazyClass = LazyClass(source, dimensions, isInstant = false, isPrimitive, classGetter = getter)
-            supplierCache[key] = WeakReference(lazyClass)
-            return lazyClass
         }
 
         /**
          * 从 BinaryReader 中读取一个 LazyClass 实例
+         *
+         * type 1（LazyClass，无注解）走反序列化缓存，同一类名只创建一个实例
+         * type 2（LazyAnnotatedClass，有注解）不走缓存，因为同一类名在不同参数位置可能有不同注解
          */
         fun of(reader: BinaryReader, classFinder: ClassAnalyser.ClassFinder?): LazyClass {
             val type = reader.readInt()
@@ -182,10 +200,23 @@ open class LazyClass internal constructor(
             val classGetter = Supplier { if (isPrimitive) Reflection.getPrimitiveType(name[0]) else finder.findClass(name) }
             when (type) {
                 1 -> {
-                    return LazyClass(name, dimensions, isInstant, isPrimitive, classGetter, name, simpleName)
+                    // type 1 无额外数据，缓存命中时 reader 位置已正确，零跳过开销
+                    val key = DeserializeCacheKey(name, simpleName, dimensions, isInstant, isPrimitive, IdentityKey(finder))
+                    return deserializeCache.computeIfAbsent(key) {
+                        LazyClass(name, dimensions, isInstant, isPrimitive, classGetter, name, simpleName)
+                    }
                 }
                 2 -> {
+                    // type 2 有额外的 annotations 列表，需要读取以推进 reader
                     val annotations = reader.readAnnotationList(classFinder)
+                    // 注解为空时与 LazyClass 行为一致，可安全按类名去重
+                    if (annotations.isEmpty()) {
+                        val key = DeserializeCacheKey(name, simpleName, dimensions, isInstant, isPrimitive, IdentityKey(finder))
+                        return deserializeAnnotatedCache.computeIfAbsent(key) {
+                            LazyAnnotatedClass(name, dimensions, isInstant, isPrimitive, classGetter, emptyList(), name, simpleName)
+                        }
+                    }
+                    // 注解非空时不去重，因为同一类名在不同参数位置可能有不同注解
                     return LazyAnnotatedClass(name, dimensions, isInstant, isPrimitive, classGetter, annotations, name, simpleName)
                 }
                 else -> {
@@ -207,6 +238,33 @@ open class LazyClass internal constructor(
             output.writeInt(clazz.getArrayDimensions())
             output.writeBoolean(true)
             output.writeBoolean(clazz.isPrimitive)
+        }
+
+        /**
+         * 清空反序列化去重缓存。
+         * 供 [Reflex.clearCaches] 调用，释放不再被引用的 LazyClass/LazyAnnotatedClass。
+         */
+        fun clearDeserializeCaches() {
+            deserializeCache.clear()
+            deserializeAnnotatedCache.clear()
+        }
+
+        fun clearCaches() {
+            classCache.clear()
+            stringCache.clear()
+            supplierCache.clear()
+            clearDeserializeCaches()
+        }
+
+        private class IdentityKey<T : Any>(private val value: T) {
+
+            override fun equals(other: Any?): Boolean {
+                return other is IdentityKey<*> && value === other.value
+            }
+
+            override fun hashCode(): Int {
+                return System.identityHashCode(value)
+            }
         }
     }
 }
