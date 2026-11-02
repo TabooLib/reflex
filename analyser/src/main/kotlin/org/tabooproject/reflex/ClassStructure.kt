@@ -2,7 +2,6 @@ package org.tabooproject.reflex
 
 import org.tabooproject.reflex.serializer.BinarySerializable
 import java.lang.reflect.Modifier
-import java.util.*
 
 /**
  * @author 坏黑
@@ -26,19 +25,19 @@ abstract class ClassStructure(
     val simpleName by lazy { runCatching { owner.simpleName }.getOrNull() }
 
     // 接口
-    val interfaces = LinkedList(interfaces)
-    val annotations = LinkedList(annotations)
+    val interfaces = interfaces.toList()
+    val annotations = annotations.toList()
 
     // 字段
-    val fields = LinkedList(fields)
+    val fields = fields.toList()
     val fieldsMap = fields.associateBy { it.name }
 
     // 方法
-    val methods = LinkedList(methods)
+    val methods = methods.toList()
     val methodsMap = methods.groupBy { it.name }
 
     // 构造函数
-    val constructors = LinkedList(constructors)
+    val constructors = constructors.toList()
 
     val isStatic: Boolean
         get() = Modifier.isStatic(access)
