@@ -344,7 +344,25 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) : Binary
 
     companion object {
 
+        /**
+         * 保留公开字段以维持源码与二进制兼容（1.2.x 的调用方可继续引用）。
+         *
+         * 注意：该表不再作为实际缓存使用 —— 强引用缓存会导致长期运行的宿主
+         * （如插件容器反复热重载）中反射结构对象只增不减。
+         * 实际缓存由内部 [reflexClassCache] 承担（弱引用 + LRU 强引用保护）。
+         * 该字段仅作为兼容占位，读取它可能得到空内容，写入它不会影响缓存行为。
+         *
+         * 不加 @JvmField：保持 Kotlin 默认生成的 getReflexClassCacheMap() getter，
+         * 与 1.2.x 的二进制签名一致（加 @JvmField 会改为直接暴露字段，破坏兼容）。
+         */
         val reflexClassCacheMap = ConcurrentHashMap<String, ReflexClass>()
+
+        /**
+         * 实际使用的反射类缓存。
+         * 弱引用持有：无外部强引用时可被 GC 回收，活跃对象由调用方强引用持有；
+         * LRU 强引用保护热点条目，避免热类被反复回收后重新分析（ASM 解析有 CPU 开销）。
+         */
+        private val reflexClassCache = WeakCache<String, ReflexClass>()
 
         fun of(clazz: Class<*>): ReflexClass {
             return of(clazz, true)
@@ -359,13 +377,13 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) : Binary
         }
 
         fun of(clazz: Class<*>, mode: AnalyseMode, saving: Boolean): ReflexClass {
-            if (saving && reflexClassCacheMap.containsKey(clazz.name)) {
-                return reflexClassCacheMap[clazz.name]!!
+            if (!saving) {
+                return ReflexClass(ClassAnalyser.analyse(clazz, mode), mode)
             }
-            return ReflexClass(ClassAnalyser.analyse(clazz, mode), mode).also {
-                if (saving) {
-                    reflexClassCacheMap[clazz.name] = it
-                }
+            // 命中则直接返回；未命中时把分析动作放进 computeIfAbsent，
+            // 使并发场景下同一类只执行一次 ASM/反射分析，避免重复开销
+            return reflexClassCache.computeIfAbsent(clazz.name) {
+                ReflexClass(ClassAnalyser.analyse(clazz, mode), mode)
             }
         }
 
@@ -374,18 +392,26 @@ class ReflexClass(val structure: ClassStructure, val mode: AnalyseMode) : Binary
         }
 
         fun of(clazz: LazyClass, inputStream: InputStream, saving: Boolean): ReflexClass {
-            if (saving && reflexClassCacheMap.containsKey(clazz.name)) {
-                return reflexClassCacheMap[clazz.name]!!
+            if (!saving) {
+                return ReflexClass(ClassAnalyser.analyseByASM(clazz, inputStream), AnalyseMode.ASM_ONLY)
             }
-            return ReflexClass(ClassAnalyser.analyseByASM(clazz, inputStream), AnalyseMode.ASM_ONLY).also {
-                if (saving) {
-                    reflexClassCacheMap[clazz.name] = it
-                }
+            return reflexClassCache.computeIfAbsent(clazz.name) {
+                ReflexClass(ClassAnalyser.analyseByASM(clazz, inputStream), AnalyseMode.ASM_ONLY)
             }
         }
 
         fun of(reader: BinaryReader, classFinder: ClassAnalyser.ClassFinder? = null): ReflexClass {
             return ReflexClass(JavaClassStructure.of(reader, classFinder), AnalyseMode.ASM_ONLY)
+        }
+
+        /**
+         * 清空反射类缓存。
+         * 供宿主在插件卸载或定期维护时调用，主动释放不再使用的反射结构。
+         */
+        @JvmStatic
+        fun clearReflexClassCache() {
+            reflexClassCache.clear()
+            reflexClassCacheMap.clear()
         }
     }
 }

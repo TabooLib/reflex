@@ -2,7 +2,6 @@ package org.tabooproject.reflex
 
 import org.tabooproject.reflex.serializer.BinaryReader
 import org.tabooproject.reflex.serializer.BinaryWriter
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * 基于 ByteBuffer 的二进制序列化工具
@@ -159,8 +158,8 @@ object ReflexClassMap {
         /** 索引映射：类名 -> 索引条目 */
         private val indexMap: Map<String, IndexEntry> = index.associateBy { it.name }
 
-        /** 已解析的类缓存 */
-        private val cache = ConcurrentHashMap<String, ReflexClass>()
+        /** 已解析的类缓存（弱引用 + 惰性清理，避免长期驻留与条目累积） */
+        private val cache = WeakCache<String, ReflexClass>()
 
         /** 所有键集合 */
         private val keySet: Set<String> = indexMap.keys
@@ -192,18 +191,15 @@ object ReflexClassMap {
          * 获取或反序列化类
          */
         private fun getOrDeserialize(name: String): ReflexClass? {
-            // 先检查缓存
-            cache[name]?.let { return it }
+            // 先检查缓存（弱引用）
+            cache.get(name)?.let { return it }
             // 获取索引条目
             val entry = indexMap[name] ?: return null
-            // 反序列化并缓存
+            // 反序列化并缓存（WeakCache 内部 putIfAbsent + 惰性清理）
             return cache.computeIfAbsent(name) {
                 try {
                     val reader = BinaryReader(bytes, entry.offset)
-                    val reflexClass = ReflexClass.of(reader, classFinder)
-                    // 同时添加到全局缓存
-                    ReflexClass.reflexClassCacheMap[name] = reflexClass
-                    reflexClass
+                    ReflexClass.of(reader, classFinder)
                 } catch (ex: Throwable) {
                     println("Failed to deserialize class $name")
                     throw ex

@@ -1,5 +1,7 @@
 package org.tabooproject.reflex
 
+import org.tabooproject.reflex.asm.AsmSignature
+
 @Suppress("UNCHECKED_CAST")
 class Reflex {
 
@@ -161,6 +163,21 @@ class Reflex {
             } else {
                 ReflexClass.of(javaClass, mode).getField(name, findToParent, remap).set(this, value)
             }
+        }
+
+        /**
+         * 清理全部反射缓存（弱引用缓存 + 反序列化去重缓存 + 签名解析缓存）。
+         *
+         * 供宿主（如 TabooLib / 插件容器）在插件卸载或定期维护时调用，
+         * 主动释放不再被引用的反射结构对象，避免长期运行后内存膨胀。
+         * 已实例化并正在使用的 ReflexClass 不受影响（由调用方强引用持有）。
+         */
+        @JvmStatic
+        fun clearCaches() {
+            ReflexClass.clearReflexClassCache()
+            LazyClass.clearCaches()
+            AsmSignature.clearCache()
+            LazyEnum.map.clear()
         }
     }
 }
