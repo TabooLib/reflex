@@ -1,0 +1,6 @@
+benchmark	score(ops/ms)	error
+mhFieldBindToEachCall	18346.813	+/-877.047
+mhFieldBoundOnce	246414.469	+/-5110.882
+mhFieldInvoke	94093.865	+/-1892.861
+mhFieldInvokeWithArguments	2612.458	+/-118.314
+mhFieldUnreflectEachCall	1220.913	+/-37.758
